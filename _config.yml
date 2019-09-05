@@ -1,31 +1,31 @@
-title: Long Haul
-description: Long Form Jekyll theme built with SASS / COMPASS / SUSY
+title: Antoine Broyelle
+description: Personnal blog
 
-url: http://brianmaierjr.github.com/long-haul
+url: https://antoinebrl.github.io/
 baseurl: ""
-paginate_path: "blog/page:num/"
+paginate_path: blog/page:num/
 permalink: blog/:title/
 
 markdown: kramdown
 highlighter: rouge
 plugins: [jekyll-paginate]
-paginate: 5
+paginate: 10
 
 navigation:
   - title: Home
     url: /index.html
-  - title: About
-    url: /about
-  - title: Contact
-    url: /contact
+#  - title: About
+#    url: /about
+#  - title: Contact
+#    url: /contact
 
 social:
-  github: brianmaierjr
-  twitter: brianmaierjr
-  facebook: brianmaierjr
-  email: brimaidesigns@gmail.com
+  github: antoinebrl
+  twitter: antbrl
+#  facebook: brianmaierjr
+#  email: brimaidesigns@gmail.com
 
 sass:
   style: compressed
 
-google_analytics: "UA-58263416-1"
+# google_analytics: "UA-58263416-1"
