@@ -1,5 +1,5 @@
 title: Antoine Broyelle
-description: Personnal blog
+description: Antoine Broyelle - Personnal blog
 
 url: https://antoinebrl.github.io/
 baseurl: ""
@@ -11,13 +11,27 @@ highlighter: rouge
 plugins: [jekyll-paginate]
 paginate: 10
 
+# includes_dir:
+#  - "_includes"
+#  - "_external"
+
 navigation:
   - title: Home
     url: /index.html
-#  - title: About
-#    url: /about
+  - title: Data visualization
+    url: /dataviz/index.html
 #  - title: Contact
 #    url: /contact
+
+collections:
+  dataviz:
+    output: true
+    permalink: /:collection/:path/
+  external:
+    output: true
+    # permalink: /:collection/:path/
+
+
 
 social:
   github: antoinebrl
@@ -29,3 +43,15 @@ sass:
   style: compressed
 
 # google_analytics: "UA-58263416-1"
+
+defaults:
+  - scope:
+      path: "p"
+      type: "posts"
+    values:
+      layout: "post"
+  - scope:
+      path: ""
+      type: "dataviz"
+    values:
+      layout: "dataviz"

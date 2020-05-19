@@ -1,0 +1,3 @@
+[submodule "_includes/external/convolution1d-sandbox"]
+	path = _includes/external/convolution1d-sandbox
+	url = https://github.com/antoinebrl/convolution1d-sandbox.git
