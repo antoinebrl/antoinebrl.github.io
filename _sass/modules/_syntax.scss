@@ -4,16 +4,17 @@
   http://sourcey.com
 ***************/
 
-.highlight {
+.highlight > .highlight {
   white-space: pre; 
   overflow: auto; 
   word-wrap: normal; /* horizontal scrolling */
   -moz-border-radius: 3px; 
   -webkit-border-radius: 3px; 
   border-radius: 3px;
-  padding: 20px; 
+  padding: 10px; 
   background: #343642;
   color: #C1C2C3;
+  font-size: 0.75em;
 }
 .highlight .hll { background-color: #ffc; }
 .highlight .gd { color: #2e3436; background-color: #0e1416; }
@@ -35,3 +36,7 @@
 .highlight .il { color: #8ae234; }
 .highlight .o { color: #989DAA; }
 .highlight .nv,.highlight .vc,.highlight .vg,.highlight .vi { color: #fff; }
+.post .highlight { margin-bottom: 0.8em !important; }
+.highlighter-rouge { border-radius: 3px; border: 1px solid #BCBEC0; background: #F1F3F5;}
+.language-python { border: 0 !important }
+
