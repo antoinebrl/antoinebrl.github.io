@@ -19,6 +19,12 @@ body {
 	p , ul {
 		margin: 0 0 2rem;
 	}
+        p + ul, p + ol {
+	        margin-top: -1.5rem;
+	}
+        div.highlighter-rouge + p {
+                margin-bottom: 0.9rem !important;
+        }
 }
 
 // Text Selection Styling

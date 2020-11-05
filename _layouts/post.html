@@ -11,18 +11,20 @@ layout: default
   <p class="meta">{{ page.date | date: '%B %d, %Y' }} | <span class="time">{{ page.content | number_of_words | divided_by:220 }}</span> Minute Read</p>
   
   {{ content }}
-
-  <details id="references">
-    <hr/>
+  
+  {% if page.references %}
+  <details id="references" style="padding-bottom:1em">
     <summary style="background:#eee">References</summary>
-    {% bibliography --cited %}
+    {% bibliography --file {{page.references}} --cited %}
     <script>
-     function open_references() {
-       document.querySelectorAll("#references")[0].setAttribute("open", "");
-     }
-     document.querySelectorAll(".citation").forEach(e => e.onclick = open_references);
+     document.querySelectorAll(".citation").forEach(
+       e => e.onclick = function () {
+         document.querySelectorAll("#references")[0].setAttribute("open", "");
+       }
+     );
     </script>
   </details>
+  {% endif %}
 </div>
 
 <!-- POST NAVIGATION -->
