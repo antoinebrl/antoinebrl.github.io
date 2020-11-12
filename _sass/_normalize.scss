@@ -88,6 +88,17 @@ pre {
 /* Text-level semantics
    ========================================================================== */
 
+p , ul {
+  margin: 0 0 2rem;
+}
+p + ul, p + ol {
+  margin-top: -1.5rem;
+}
+div.highlighter-rouge + p {
+  margin-bottom: 0.9rem !important;
+}
+
+
 /**
  * 1. Remove the gray background on active links in IE 10.
  * 2. Remove gaps in links underline in iOS 8+ and Safari 8+.

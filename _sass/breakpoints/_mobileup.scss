@@ -14,17 +14,8 @@ body {
 	line-height: 1.75;
 	color: #555;
 	overflow-x: hidden;
-  margin: 0;
+	margin: 0;
 
-	p , ul {
-		margin: 0 0 2rem;
-	}
-        p + ul, p + ol {
-	        margin-top: -1.5rem;
-	}
-        div.highlighter-rouge + p {
-                margin-bottom: 0.9rem !important;
-        }
 }
 
 // Text Selection Styling
