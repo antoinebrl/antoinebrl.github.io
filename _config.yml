@@ -8,7 +8,7 @@ permalink: blog/:title/
 
 markdown: kramdown
 highlighter: rouge
-plugins: [jekyll-paginate]
+plugins: [jekyll-paginate, jekyll-toc]
 paginate: 10
 
 # includes_dir:

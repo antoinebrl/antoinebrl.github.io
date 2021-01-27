@@ -20,15 +20,15 @@ BUTTON DEFAULTS
   transition: background-color 0.14s ease-in-out;
 
   // hovering on the btn
-  &:hover, &:focus {
+  &:hover {
     color: $white;
     text-decoration: none;
     background-color: darken($primary-color, 10%);
   } // end hover
 
   // clicking on the button
-  &:active {
-    top: 1px; // adds a tiny hop to the click
+  &:active, &:hover {
+    top: 3px; // adds a tiny hop to the click
   } // end active
 
 } // end .button
@@ -66,8 +66,8 @@ BUTTON DEFAULTS
   color: $primary-color;
 
   &:hover {
-    background-color: $primary-color;
-    color: $white;
+    background-color: darken($white, 15%);
+    color: darken($primary-color, 10%);
   }
 }
 

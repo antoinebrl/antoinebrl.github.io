@@ -8,10 +8,16 @@ layout: default
       </div>
   {% endif %}
   <h1 class="postTitle">{{ page.title }}</h1>
-  <p class="meta">{{ page.date | date: '%B %d, %Y' }} | <span class="time">{{ page.content | number_of_words | divided_by:220 }}</span> Minute Read</p>
-  
-  {{ content }}
-  
+  <p class="meta">{{ page.date | date: '%B %d, %Y' }} | <span class="time">{{ page.content | number_of_words | divided_by:280 }}</span> Minute Read</p>
+
+  <p>{% if page.description %}{{ page.description }}{% else %}{{ page.excerpt | strip_html }}{% endif %}</p>
+  <div id="table-of-contents">
+    {% toc %}
+  </div>
+  <div id="markdown-content">
+    {{ content }}
+  </div>
+
   {% if page.references %}
   <details id="references" style="padding-bottom:1em">
     <summary style="background:#eee">References</summary>
