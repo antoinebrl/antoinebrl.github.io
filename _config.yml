@@ -1,5 +1,5 @@
 title: Antoine Broyelle
-description: Antoine Broyelle - Personnal blog
+description: Antoine Broyelle - Personnal Blog
 
 url: https://antoinebrl.github.io/
 baseurl: ""
@@ -18,15 +18,10 @@ paginate: 10
 navigation:
   - title: Home
     url: /index.html
-  - title: Data visualization
-    url: /dataviz/index.html
 #  - title: Contact
 #    url: /contact
 
 collections:
-  dataviz:
-    output: true
-    permalink: /:collection/:path/
   external:
     output: true
     # permalink: /:collection/:path/
@@ -50,11 +45,6 @@ defaults:
       type: "posts"
     values:
       layout: "post"
-  - scope:
-      path: ""
-      type: "dataviz"
-    values:
-      layout: "dataviz"
 
 
 scholar:

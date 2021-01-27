@@ -175,7 +175,7 @@ HEADER STYLING
 
 .header {
 	background-color: $background-color;
-	background-image: url('/assets/img/touring.jpg');
+	background-image: linear-gradient( rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3) ), url('/assets/img/lights.jpg');
 	background-size: cover;
 	background-position: center center;
 	color: white;
