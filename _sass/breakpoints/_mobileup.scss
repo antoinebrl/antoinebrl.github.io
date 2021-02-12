@@ -221,31 +221,24 @@ POST STYLING
 	blockquote {
 		clear: both;
 		margin: 2.5em 0;
-		padding: 0;
+		padding: 1em;
 		line-height: 1.8;
 		position: relative;
+		border-left: 10px solid #ccc;
+		background: #f9f9f9;
 
-		&:before {
-			content: "";
-			position: absolute;
-			top: -1.25em;
-			background: $background-color;
-			display: block;
-			height: 2px;
-			width: 150px;
-			left: calc(50% - 75px);
-		}
+        blockquote:before {
+          color: #ccc;
+          content: open-quote;
+          font-size: 4em;
+          line-height: 0.1em;
+          margin-right: 0.25em;
+          vertical-align: -0.4em;
+        }
 
-		&:after {
-			content: "";
-			position: absolute;
-			bottom: -1.25em;
-			background: $background-color;
-			display: block;
-			height: 2px;
-			width: 150px;
-			left: calc(50% - 75px);
-		}
+        p {
+          margin: 0;
+        }
 	}
 
 	.meta {
