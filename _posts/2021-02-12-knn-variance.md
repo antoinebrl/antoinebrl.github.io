@@ -28,5 +28,5 @@ The visualization is interactive. You can:
 
 Have some fun!
 
-<iframe width="100%" height="928" frameborder="0"
+<iframe width="100%" height="1040" frameborder="0"
   src="https://observablehq.com/embed/@antoinebrl/knn-visualizing-the-variance?cells=viewof+k%2Cviewof+n%2Cviewof+radius%2Cviewof+boundary_cell_size%2Cchart%2Cstyle"></iframe>
