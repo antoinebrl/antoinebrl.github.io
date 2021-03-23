@@ -1,0 +1,897 @@
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="" />
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script type="text/x-mathjax-config">
+  MathJax = {
+    loader: {load: ['[tex]/color']},
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)'], ['\\[', '\\]']],
+      packages: {'[+]': ['color']}
+    },
+    svg: {
+      fontCache: 'global'
+    }
+  };
+
+  </script>
+  <script type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/input/tex/extensions/colorV2.js" charset="UTF-8"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/input/tex/extensions/color.js" charset="UTF-8"></script>
+  <style>
+    body {
+      font-family: monospace;
+      font-size: 12px;
+      color: #818181;
+      background-color: #f4f1de;
+      /* background-color: #eeeeee; */
+      margin: auto;
+      height: 100%;
+      text-align: center;
+      /* width: 30%; */
+      overscroll-behavior-y: none;
+    }
+
+    h1, h2{
+        font-weight: 1.2;
+        color: #505050;
+    }
+    h2 {
+      text-align: left;
+      margin-bottom: 0.5em;
+    }
+    hr {
+      color: white;
+      border-width: 1px;
+    }
+
+
+    .btn-square {
+      height: 1.5em !important;
+      width: 1.5em  !important;
+    }
+    input[type=radio]{
+      vertical-align: text-bottom;
+      line-height: 0.4em;
+    }
+    input[type=range]{
+      vertical-align: middle;
+      line-height: 1.6em;
+      width: 120;
+    }
+    input[type=number]{
+      width: 56px;
+    }
+
+    #math {
+      width: 100%;
+      height: 90px;
+      font-size: 1.25em;
+    }
+    .menu {
+      /* margin-left: 5px; */
+      /* margin-right: 5px; */
+      padding-top: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid lightgray;
+    }
+    .menu h1, .menu .option {
+      display: inline;
+    }
+    .option {
+        position:fixed;
+        left: 8px;
+        top: 2px;
+    }
+
+    .rotate270 {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        text-align: right;
+    }
+    .menu .btn {
+      /* height:105px; */
+      z-index: 2; /* Stay on top */
+    }
+
+    .btn{
+        display: inline-block;
+        padding: 6px 5px;
+        margin-bottom: 0;
+        font-size: 14px;
+        text-align: center;
+        /* font-weight: 400; */
+        line-height: 1.42857143;
+        white-space: nowrap;
+        vertical-align: middle;
+        -ms-touch-action: manipulation;
+        touch-action: manipulation;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        background-image: none;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        text-decoration: none;
+        margin-top: 4px;
+        margin-bottom : 4px;
+        height: 2em;
+
+        color: #4e5462;
+        background-color: #fff;
+        border-color: #ccc;
+    }
+    .btn:hover {
+      background-color: #eee;
+      border-color: #aaa;
+    }
+
+    #result-btn {
+        margin-top: 34px !important;
+        cursor: default !important;
+        border-bottom: 0px !important;
+        border-top: 0px !important;
+        border-right: 0px !important;
+    }
+    #result-btn:hover {
+        border-bottom: 0px !important;
+        border-top: 0px !important;
+        border-right: 0px !important;
+        background-color: #fff !important;
+        border-color: #ccc !important ;
+    }
+
+    /* The side navigation menu */
+   .sidenav {
+       height: auto; /* 100% Full-height */
+       width: 0; /* 0 width - change this with JavaScript */
+       position: fixed; /* Stay in place */
+       z-index: 10; /* Stay on top */
+       background-color: #eee; /* Black*/
+       overflow-x: hidden; /* Disable horizontal scroll */
+       transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+       margin-left: 8px;
+       margin-top: -6px;
+       box-shadow: 0px 0px 0px 1px lightgray inset;
+       /* border: 1px solid lightgray; */
+       box-sizing: border-box;
+   }
+
+   /* The navigation menu links */
+   .sidenav a {
+       color: #818181;
+       display: block;
+       transition: 0.3s;
+   }
+
+   /* When you mouse over the navigation links, change their color */
+   .sidenav a:hover {
+     color: #111;
+   }
+
+   /* Position and style the close button (top right corner) */
+   .sidenav .closebtn {
+       position: absolute;
+       top: 8px;
+       right: 8px;
+       font-size: 2em;
+       margin-left: 20px;
+   }
+
+   /* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+   #main {
+     transition: margin-left .5s;
+     padding: 20px;
+   }
+
+   /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+   @media screen and (max-height: 450px) {
+     .sidenav {padding-top: 15px;}
+     .sidenav a {font-size: 18px;}
+   }
+
+   .nav-wrapper {
+     margin: 10px;
+     width: 280px;
+   }
+
+   .grabbing {
+     cursor: move;
+   }
+
+   #player .btn {
+     width: 80px;
+     height: 20px;
+   }
+
+
+  </style>
+</head>
+<body>
+  <div class="menu">
+    <h1>Convolution Sandbox</h1>
+    <div class="option btn" onclick="openNav('menu')">options</div>
+    <div id="menu" class="sidenav">
+      <div class="nav-wrapper">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav('menu')">&times;</a>
+        <h2>General:</h2>
+          <p>sphere radius:&nbsp;<input id="radius" type="number" min="6" max="20" value="10" step="2" /></p>
+        <hr />
+        <h2>kernel:</h2>
+          <div>support (K):&nbsp;<div id="delete-kernel-element" class="btn btn-square">-</div><div id="add-kernel-element" class="btn btn-square">+</div></div>
+          <div>type:
+            <input type="radio" value="constant" name="kernel" />constant
+            <input type="radio" value="step" name="kernel" />step
+            <input type="radio" value="square" name="kernel" />square<br />
+            <input type="radio" value="triangle" name="kernel" />triangle
+            <input type="radio" value="gaussian" name="kernel" />gaussian
+            <input type="radio" value="derivative" name="kernel" />derivative
+          </div>
+        <hr />
+        <h2>signal:</h2>
+          <div>support:<div id="delete-signal-element" class="btn btn-square">-</div><div id="add-signal-element" class="btn btn-square">+</div></div>
+          <div>type:
+            <input type="radio" value="sine" name="signal" />sine wage
+            <input type="radio" value="square" name="signal" />square
+            <input type="radio" value="ramp" name="signal" />ramp
+          </div>
+          <p>padding (p):&nbsp;<input type="range" min="0" max="4" value="0" step="1" class="slider" id="padding" /></p>
+        <hr />
+        <h2>convolution:</h2>
+          <p>dilatation (d):<input type="range" min="1" max="3" value="1" step="1" class="slider" id="dilatation" /></p>
+          <p>stride (s):&nbsp;<input type="range" min="1" max="3" value="0" step="1" class="slider" id="stride" /></p>
+      </div>
+    </div>
+  </div>
+
+   <div id="math"></div>
+   <div id="canvas"></div>
+   <div id="player">
+     <div id="reset" class="btn">reset</div>
+     <div id="prevstep" class="btn">previous</div>
+     <div id="play" class="btn">play</div>
+     <div id="nextstep" class="btn">next</div>
+     <div id="end" class="btn">last</div>
+   </div>
+
+  <script>
+
+  /* Set the width of the side navigation to 250px */
+  function openNav(id) {
+    let element = document.getElementById(id)
+    if (element.style.width == "" || element.style.width == "0px") {
+      element.style.width = "300px";
+    } else {
+      element.style.width = "0px";
+    }
+  }
+
+  /* Set the width of the side navigation to 0 */
+  function closeNav(id) {
+    document.getElementById(id).style.width = "0";
+  }
+
+if (window.outerWidth > 900 + 250*2) {
+  openNav("menu")
+}
+
+const width = Math.max(575, Math.min(window.outerWidth, 900));
+
+const scaleW = window.outerWidth/width;
+document.querySelector('meta[name=viewport]').setAttribute('content', 'width=device-width,minimum-scale='+scaleW+',maximum-scale='+scaleW+',initial-scale='+scaleW);
+
+let height = 620;
+
+const bkg_color = "#f4f1de";
+const text_color = "#818181";
+const kernel_color = "#C72E38";
+const func_color = "#1d3557";
+const mult_color = "#d94a64";
+const add_color = "#679436";
+const out_color = "#8e576d";
+const duration = 350;
+
+
+const kernel_line_y = 80;
+const func_line_y = 205;
+const conv_line_y = 330;
+const out_line_y = 490;
+
+const magnitude_max = 50;
+const pts_spacing = 25;
+const kernel_max_support = 7;
+let radius = 10;
+
+let dilatation = 1;
+let stride = 1;
+let padding = 0;
+let step = 0;
+let animate = false;
+
+const svg = d3.select("#canvas")
+    .append("svg")
+    // .style("background-color", "#f4f1de")
+    .attr("width", width)
+    .attr("height", height);
+
+let kernel_fn = d3.range(5).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
+let func_fn = d3.range(15).map(i => ({ y: magnitude_max * (Math.random() * 2 - 1)}));
+let func_padded_fn = [];
+let out_fn = [];
+
+const kernel = svg.append("g").attr("id", "kernel");
+const conv = svg.append("g").attr("id", "conv");
+const ops = conv.append("g").attr("id", "ops");
+const pad_left = svg.append("g").attr("id", "pad_left");
+const pad_right = svg.append("g").attr("id", "pad_right");
+const func = svg.append("g").attr("id", "func");
+const out = svg.append("g").attr("id", "out");
+
+function printLabel(label, line_y) {
+  svg.append("text")
+      .attr("stroke-width", "2")
+      .attr("fill", "#4e5462")
+      .attr("transform", "rotate(-90) translate(-" + line_y + ", 20)")
+      .attr("text-anchor", "middle")
+      .attr("font-family", "monospace")
+      .attr("dominant-baseline", "middle")
+      .text(label);
+}
+printLabel("kernel", kernel_line_y);
+printLabel("signal", func_line_y);
+printLabel("convolution", conv_line_y);
+printLabel("result", out_line_y);
+
+
+
+function padFunc(fn, pad) {
+  let padded = [];
+  for (let i = 0; i < pad; i++) {
+    padded.push({y: 0});
+  }
+  padded = padded.concat(fn);
+  for (let i = 0; i < pad; i++) {
+    padded.push({y: 0});
+  }
+  return padded;
+}
+
+function computeConv(f, g) {
+    out_fn = [];
+    let s = 0
+    while (getConvRightPosition(s) <= func_padded_fn.length) {
+        let c = 0;
+
+        try {
+            for (let i = 0; i < g.length; i++) {
+                c += g[i].y * f[s * stride + i * dilatation].y
+            }
+            out_fn.push({y: - c / magnitude_max});
+        } catch  (error) {
+        }
+        s += 1;
+    }
+    let max_value = out_fn.reduce((a, b) => {return {y: Math.max(a.y, Math.abs(b.y))}}, {y: 0})
+    out_fn = out_fn.map(d => ({y: d.y / max_value.y * magnitude_max}))
+    return out_fn.slice(0, step+1);
+}
+
+function updateEquation() {
+    const equation = document.getElementById("math");
+    // result
+    latex_equation = "\\textcolor{" + out_color + "}{(f * g)}("+ step + ") "
+    latex_equation += "= "
+    // sum
+    const k = Math.floor((kernel_fn.length - 1) / 2)
+    if (kernel_fn.length > 1) {
+        latex_equation += "\\textcolor{" + add_color + "}{"
+        latex_equation += "\\sum_{i=-k}^{K-k}"
+        latex_equation += "}"
+    }
+
+    // kernel
+    latex_equation += "\\textcolor{" + kernel_color + "}{w_ \\textcolor{" + add_color + "}{i}}"
+    // mult
+    latex_equation += "\\textcolor{" + mult_color + "}{\\; \\times \\;} "
+
+    // signal
+    latex_equation += "\\textcolor{" + func_color + "}{"
+    latex_equation += "f_{"
+    latex_equation += " \\textcolor{" + text_color + "}{" + step + "} \\times \\textcolor{PaleVioletRed}{s}"
+    latex_equation += "- \\textcolor{" + add_color + "}{i}"
+    latex_equation += "*\\textcolor{darkorange}{d}"
+
+    const offset = Math.floor(kernel_fn.length / 2) * dilatation - padding
+    latex_equation += "+\\textcolor{CadetBlue}{o}"
+    latex_equation += "}}"
+
+    // put brackets around operators to reduce spacing
+    legend = "\\small "
+    legend += "\\textcolor{" + kernel_color + "}{K{=}" + kernel_fn.length +"}";
+    legend += ",\\; p{=}" + padding
+    legend += ",\\; \\textcolor{darkorange}{d{=}" + dilatation + "}"
+    legend += ",\\; \\textcolor{PaleVioletRed}{s{=}" + stride + "}"
+    legend += ",\\; \\textcolor{" + add_color + "}{k{=} \\lfloor (K - 1)/2 \\rfloor {=} " + k + "}"
+    legend += ",\\; \\textcolor{CadetBlue}{o{=}\\lfloor K/2 \\rfloor {*} d {-} p {=}" + offset + "}"
+
+    equation.innerHTML = "<p>" + "\\[" + latex_equation + "\\]" + "</p><p>" + "\\[" + legend + "\\]" + "</p>";
+    try {
+      MathJax.typeset(["#math"]);
+    } catch (error) {
+    }
+}
+
+dragY = d3.drag()
+    .on("start", function(d) {
+        d3.select(this).attr("stroke", "black");
+        d3.select(this).style("cursor", null);
+        d3.select("#canvas").node().classList.add("grabbing");;
+    })
+    .on("drag", function(d) {
+        y = d3.event.y;
+        y = Math.max(-magnitude_max, y);
+        y = Math.min(+magnitude_max, y);
+        d.y = y;
+
+        update();
+    })
+    .on("end", function(d) {
+        d3.select(this).attr("stroke", null);
+        d3.select(this).style("cursor", "pointer");
+        d3.select("#canvas").node().classList.remove("grabbing");;
+    })
+
+//// Draw X axis line
+function updateXaxis(root, n, dilatation) {
+    if (root.select("#hline").empty()) {
+        root.append("line")
+            .attr("id", "hline")
+            .attr("y1", 0)
+            .attr("y2", 0)
+            .attr("stroke", "gray")
+            .attr("stroke-width", 2);
+    }
+    root.select("#hline")
+        .transition()
+        .duration(animate * duration)
+        .attr("x1", 0)
+        .attr("x2", n * pts_spacing * dilatation);
+}
+
+//// Update group top right corner positions
+function updateCenteredLayout(root, n, line_y, dilatation) {
+    const x = (width - n * pts_spacing * dilatation) / 2;
+    root.transition()
+        .duration(animate * duration)
+        .attr("transform", "translate(" + x + "," + line_y + ")");
+}
+
+function updatePadLeft() {
+    const right = (width - func_fn.length * pts_spacing) / 2;
+    const left = right - padding * pts_spacing;
+    pad_left.transition()
+        .duration(animate * duration)
+        .attr("transform", "translate(" + left + "," + func_line_y + ")");
+}
+
+function updatePadRight() {
+    const left = (width + func_fn.length * pts_spacing) / 2;
+    pad_right.transition()
+        .duration(animate * duration)
+        .attr("transform", "translate(" + left + "," + func_line_y + ")");
+}
+
+function updateConvLayout() {
+    let x = (width - func_padded_fn.length * pts_spacing) / 2;
+    x += pts_spacing * step * stride;
+    x -= pts_spacing * (dilatation - 1) / 2;
+    conv.transition()
+        .duration(animate * duration)
+        .attr("transform", "translate(" + x + "," + conv_line_y + ")");
+}
+
+function updateOutputLayout() {
+    let x = (width - func_padded_fn.length * pts_spacing) / 2;
+    x += pts_spacing * ((Math.ceil(kernel_fn.length / 2) - 1) * dilatation);
+    x -= pts_spacing * (stride - 1) / 2 ;
+    out.transition()
+        .duration(animate * duration)
+        .attr("transform", "translate(" + x + "," + out_line_y + ")");
+}
+
+//// Drawing primitives
+function drawPadding(root, n) {
+    // data binding
+    const cercles = root.selectAll("circle").data(d3.range(n));
+    // remove elements no longer in data
+    cercles.exit().transition().duration(animate * duration / 2).attr("r", 0).remove();
+    // Create new entry for new elements in data
+    const new_circles = cercles
+        .enter()
+        .append("circle")
+        .attr("fill", "lightgray")
+        .attr("r", 0)
+        .transition()
+        .duration(animate * duration * 2)
+        .attr("r", radius)
+    // Operates on both new and old elements
+    cercles
+        .merge(new_circles)
+        .attr("cx", function(i) {
+            return pts_spacing * (i + 0.5);
+        })
+        .attr("cy", 0);
+}
+
+function drawFunction(root, data, dilatation, color, is_interactive) {
+    // data binding
+    const vlines = root.selectAll("#vline").data(data);
+    // remove elements no longer in data
+    vlines.exit().transition().duration(animate * duration / 2).attr("stroke-width", 0).remove();
+    // Create new entry for new elements in data
+    const new_lines = vlines
+        .enter()
+        .append("line")
+        .attr("id", "vline")
+        .attr("stroke", "gray")
+        .attr("stroke-width", 2)
+        .attr("y1", 0)
+        .attr("x1", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .attr("x2", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        });
+    // Operates on both new and old elements
+    vlines
+        .merge(new_lines)
+        .attr("y2", function(d, i) {
+            return d.y;
+        })
+        .transition()
+        .duration(animate * duration)
+        .attr("x1", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .attr("x2", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        });
+
+
+    // data binding
+    const cercles = root.selectAll("circle").data(data);
+    // remove elements no longer in data
+    cercles.exit().transition().duration(animate * duration / 2).attr("r", 0).remove();
+    // Create new entry for new elements in data
+    const new_circles = cercles
+        .enter()
+        .append("circle")
+        .attr("fill", color)
+        .attr("cx", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .attr("r", 0)
+    if (is_interactive) {
+        new_circles
+            .style("cursor", "pointer")
+            .call(dragY)
+            .on("dblclick", function(d) {
+                d.y = d.y ? 0 : - magnitude_max;
+                update()
+            });
+    }
+
+    // Operates on both new and old elements
+    cercles
+        .merge(new_circles)
+        .attr("cy", function(d, i) {
+            return d.y;
+        })
+        .transition()
+        .duration(animate * duration)
+        .attr("cx", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .attr("r", radius);
+}
+
+function drawConvOps(root, data, dilatation) {
+    // data binding
+    const mult_lines = root.selectAll("#multline").data(data);
+    // remove elements no longer in data
+    mult_lines.exit().transition().duration(animate * duration / 2).attr("stroke-width", 0).remove();
+    // Create new entry for new elements in data
+    const new_mutl_lines = mult_lines
+        .enter()
+        .append("line")
+        .attr("id", "multline")
+        .attr("stroke", mult_color)
+        .attr("stroke-width", 0)
+        .attr("y1", 0)
+        .attr("y2", 0)
+        .attr("x1", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .attr("x2", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .transition("fade in")
+        .duration(animate * duration / 2)
+        .attr("stroke-width", 1.25)
+        .attr("y2", -125);
+    // Operates on both new and old elements
+    mult_lines
+        .transition()
+        .duration(animate * duration)
+        .attr("x1", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+        .attr("x2", function(d, i) {
+            return pts_spacing * (i + 0.5) * dilatation;
+        })
+
+    // data binding
+    const add_lines = root.selectAll("#addline").data(data);
+    // remove elements no longer in data
+    add_lines.exit().transition().duration(animate * duration / 2).attr("stroke-width", 0).remove();
+    // Create new entry for new elements in data
+    const new_add_lines = add_lines
+        .enter()
+        .append("path")
+        .attr("id", "addline")
+        .attr("stroke", add_color)
+        .attr("fill", "none");
+
+    // Operates on both new and old elements
+    add_lines
+        .merge(new_add_lines)
+        .transition()
+        .duration(animate* duration)
+        .attr("d", function(d, i) {
+            const x_pts = pts_spacing * (i + 0.5) * dilatation;
+            const x_middle = pts_spacing * (Math.ceil(data.length / 2) - 0.5) * dilatation;
+            const points = [
+                [x_pts, Math.max(d.y, -radius / 2) + 10],
+                [x_pts, magnitude_max + 10],
+                [x_pts, magnitude_max + 20],
+                [x_middle, magnitude_max + 20],
+                [x_middle, magnitude_max + 25],
+                [x_middle, magnitude_max + 150 - magnitude_max],
+            ];
+
+            const line = d3
+                .line()
+                .x(d => d[0])
+                .y(d => d[1])
+                .curve(d3.curveBundle.beta(1));
+            return line(points);
+        });
+
+    new_add_lines
+        .attr("stroke-width", 0)
+        .transition()
+        .duration(animate * duration)
+        .attr("stroke-width", 1.25);
+}
+
+
+function update() {
+    func_padded_fn = padFunc(func_fn, padding);
+    // kernel
+    updateCenteredLayout(kernel, kernel_fn.length, kernel_line_y, dilatation);
+    updateXaxis(kernel, kernel_fn.length, dilatation);
+    drawFunction(kernel, kernel_fn, dilatation, kernel_color, true);
+
+    // function
+    updatePadLeft();
+    updateXaxis(pad_left, padding, 1);
+    drawPadding(pad_left, padding);
+
+    updateCenteredLayout(func, func_fn.length, func_line_y, 1);
+    updateXaxis(func, func_fn.length, 1);
+    drawFunction(func, func_fn, 1, func_color, true);
+
+    updatePadRight();
+    updateXaxis(pad_right, padding, 1);
+    drawPadding(pad_right, padding);
+
+    // conv-ops
+    updateConvLayout();
+    // reverse kernel in a non destructive way by making a copy
+    const reversed_kernel_fn = [...kernel_fn].reverse();
+    updateXaxis(conv, kernel_fn.length, dilatation);
+    drawFunction(conv, reversed_kernel_fn, dilatation, kernel_color, true);
+    drawConvOps(ops, reversed_kernel_fn, dilatation);
+
+    // result
+    out_fn = computeConv(func_padded_fn, reversed_kernel_fn);
+    updateOutputLayout();
+    updateXaxis(out, out_fn.length, stride);
+    drawFunction(out, out_fn, stride, out_color, false);
+}
+update();
+updateEquation();
+animate = true;
+
+
+function getConvRightPosition(step) {
+    return step * stride + (kernel_fn.length - 1) * dilatation + 1;
+}
+
+//// User input
+d3.select("#radius").on("input", function() {
+    radius = Math.max(6, Math.min(this.value, 20));
+    this.value = radius;
+    update();
+});
+
+d3.select("#dilatation")
+    .on("input", function() {
+        dilatation = Math.min(Math.max(this.min, this.value), this.max);
+        this.value = dilatation;
+        while (step > 0 && getConvRightPosition(step) > func_padded_fn.length) {
+            step -= 1;
+        }
+        update();
+        updateEquation();
+    })
+
+d3.select("#stride")
+    .on("input", function() {
+        stride = Math.min(Math.max(this.min, this.value), this.max);
+        this.value = stride;
+        while (step > 0 && getConvRightPosition(step) > func_padded_fn.length) {
+            step -= 1;
+        }
+        update();
+        updateEquation();
+    });
+
+d3.select("#padding")
+    .on("input", function() {
+        padding = Math.min(Math.max(this.min, this.value), this.max);
+        this.value = padding;
+        while (step > 0 && getConvRightPosition(step) > func_fn.length + 2 *padding) {
+            step -= 1;
+        }
+        update();
+        updateEquation();
+    });
+
+d3.select("#prevstep")
+    .on("click", function() {
+        if (step > 0) {
+            step -= 1;
+            update();
+            updateEquation();
+        }
+    });
+d3.select("#nextstep")
+    .on("click", function() {
+        if (getConvRightPosition(step) + stride <= func_padded_fn.length) {
+            step += 1;
+            update();
+            updateEquation();
+        }
+    });
+
+d3.select("#add-kernel-element")
+    .on("click", function() {
+        if (kernel_fn.length < kernel_max_support) {
+            kernel_fn.push({ y: 0 });
+            while (step > 0 && getConvRightPosition(step) > func_padded_fn.length) {
+                step -= 1;
+            }
+            update();
+            updateEquation();
+        }
+    });
+d3.select("#delete-kernel-element")
+    .on("click", function() {
+        if (kernel_fn.length > 1) {
+            kernel_fn.pop();
+            update();
+        }
+    });
+
+d3.selectAll("input[name='kernel']").on("change", function(){
+    if (this.value == "constant") {
+        kernel_fn = [{y:-magnitude_max}, {y:-magnitude_max}, {y:-magnitude_max}];
+    } else if (this.value == "step") {
+        kernel_fn = [{y:0}, {y:0}, {y:-magnitude_max}, {y:-magnitude_max}, {y:-magnitude_max}];
+    } else if (this.value == "square") {
+        kernel_fn = [{y:0}, {y:-magnitude_max}, {y:-magnitude_max}, {y:-magnitude_max}, {y:0}];
+    } else if (this.value == "triangle") {
+        kernel_fn = [{y:-magnitude_max / 3}, {y:-magnitude_max * 2 / 3}, {y:-magnitude_max}, {y:-magnitude_max * 2 / 3}, {y:-magnitude_max / 3}];
+    } else if (this.value == "gaussian") {
+        kernel_fn = [{y:-magnitude_max * 4 / 19}, {y:-magnitude_max * 10 / 18 }, {y:-magnitude_max * 16 / 19}, {y:-magnitude_max}, {y:-magnitude_max * 16 / 19}, {y:-magnitude_max * 10 / 19}, {y:-magnitude_max * 4 / 19}];
+    } else if (this.value == "derivative") {
+        kernel_fn = [{y:-magnitude_max}, {y:magnitude_max}];
+    }
+    while (step > 0 && getConvRightPosition(step) > func_padded_fn.length) {
+        step -= 1;
+    }
+    update();
+    updateEquation();
+});
+
+d3.select("#add-signal-element")
+    .on("click", function() {
+          func_fn.push({ y: 0 });
+          update();
+    });
+d3.select("#delete-signal-element")
+    .on("click", function() {
+          func_fn.pop({ y: 0 });
+          func_padded_fn = padFunc(func_fn, padding);
+          while (step > 0 && getConvRightPosition(step) > func_padded_fn.length) {
+              step -= 1;
+          }
+          update();
+          updateEquation();
+    });
+d3.selectAll("input[name='signal']").on("change", function(){
+    if (this.value == "sine") {
+        new_fn = []
+        for (let i = 0; i < func_fn.length; i++) {
+            new_fn.push({y: Math.cos(i/1.3) * magnitude_max})
+        }
+        func_fn = new_fn;
+    } else if (this.value == "square") {
+        new_fn = []
+        for (let i = 0; i < func_fn.length; i++) {
+            console.log()
+            new_fn.push({y: - (Math.floor(i / 5) + 1)% 2 * magnitude_max})
+        }
+        func_fn = new_fn;
+    } else if (this.value == "ramp") {
+        new_fn = []
+        for (let i = 0; i < func_fn.length; i++) {
+            new_fn.push({y: - ((i / 5) % 1 * 5/4 - 0.5) * 2 * magnitude_max})
+        }
+        func_fn = new_fn;
+    }
+    while (step > 0 && getConvRightPosition(step) > func_padded_fn.length) {
+        step -= 1;
+    }
+    update();
+    updateEquation();
+});
+
+
+d3.select("#play")
+    .on("click", function() {
+        d3.selectAll("*").interrupt();
+        svg.transition().on("end", function repeat(d){
+            if (getConvRightPosition(step) + stride <= func_padded_fn.length) {
+                step += 1;
+                update();
+                updateEquation();
+                d3.active(this).transition().delay(600).on("start", repeat);
+            }
+        })
+    });
+d3.select("#reset")
+    .on("click", function() {
+        d3.selectAll("*").interrupt();
+        step = 0;
+        update();
+        updateEquation();
+    });
+d3.select("#end")
+    .on("click", function() {
+        d3.selectAll("*").interrupt();
+        while (getConvRightPosition(step) + stride <= func_padded_fn.length) {
+            step += 1;
+        }
+        update();
+        updateEquation();
+    });
+  </script>
+</body>
+</html>
+
