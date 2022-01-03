@@ -6,3 +6,5 @@ node_modules
 .jekyll-metadata
 .bundle/
 .idea/
+.DS_Store
+.vendor/

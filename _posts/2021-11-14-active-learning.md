@@ -6,7 +6,7 @@ toc: true
 description: "I recently spent quite some time learning and playing with Active Learning.
 The claim of active learning is quite appealing: a model can achieve the same, or even better,
 performances with fewer annotated samples if it can select which specific instances need to
-be labeled. Sounds promising, isn't it? In this article,
+be labeled. Sounds promising, right? In this article,
 I will attempt to reflect on the promises of active learning to show that the picture is
 not all bright. Active Learning has a few drawbacks, however, it represents a viable solution
 when building datasets at scale or when tackling the diversity edge cases."
@@ -31,6 +31,15 @@ This should translate to **faster and cheaper annotations**.
 
 It should look something like this:
 
+<figure>
+  <img src="/assets/img/active-learning-illustrate.svg" alt="Benefit of active learning illustrated">
+</figure>
+
+The rest of the article does not assume any more knowledge about active learning than
+the desctiption above. If you are interested in learning more about the different
+scenarios and query strategies, I recommend reading
+["Active Learning Literature Survey" by Burr Settles](http://burrsettles.com/pub/settles.activelearning.pdf)
+or the [Wikipedia article on this topic](https://en.wikipedia.org/wiki/Active_learning_(machine_learning))
 
 ## What's wrong with Active Learning?
 
@@ -40,9 +49,9 @@ widely embraced.
 
 ### Static dataset is the rule
 
-All publicly available datasets are inert. At the very moment they become public they
-get frozen. Not a single new sample or annotation will be added or modified. This is of course
-for good reasons: **having a static dataset ensures a fair comparison of methods
+All publicly available datasets are inert. The second they become public, they
+freeze: no new sample or annotation will be added or modified. This happens
+for good a reason: **having a static dataset ensures a fair comparison of methods
 and algorithms**. It leads to a sharp separation between building the datasets and training
 a model.
 
@@ -50,26 +59,26 @@ However, in the industry, the story is completely different. **Data keeps on bei
 and labeling is often a continuous effort**. As more and more code are shared
 under permissive open source licenses, the real competitive advantage comes from the size
 and the quality of the datasets. I saw some large fully annotated datasets being sold for a few
-million dollars. (This dataset was then copied into a big hard drive and sent over
-to the other side of the Earth by mail to complete the exchange &#128552;.
+million dollars. (This dataset was then copied into a big hard drive and sent over by mail
+to the other side of the Earth to complete the exchange &#128552;.
 But, that is a story for another time!).
 
 The curation process is often overlooked. For sure it's not the sexiest part of
 the job, but I believe people should talk more about it because it's a key aspect
-of the success of any ML project. If I were to guestimate, I would say for one
+of the success of any ML project. If I were to guesstimate, I would say for one
 paper on dataset curation and creation, there are more than ten thousand papers claiming
 state-of-the-art for their models.
 
 
 ### Training is easy, Evaluation is hard
 
-Training a model is fun, but that's the easy part. **The real struggle is to perform
-a fair and challenging evaluation of the predictive capabilities of a model**.
+Training a model is great fun. Unfortunately, that's the easy part!
+**The real struggle is to perform a fair and challenging evaluation of the predictive
+capabilities of a model**.
 It is now considered the golden rule to set aside a portion of the labeled samples
 before doing any training. The goal is to understand if the model behaves
 well on unseen data. Reporting performances on the training set falls short of
-the desired assessment —a 1-nearest-neighbor will always be 100% accurate with the
-evaluation protocol.
+the desired assessment.
 
 Given a dataset with annotations (and some rich metadata), it becomes easier to build a
 representative and challenging test set before training. But, as **active learning combines
@@ -102,9 +111,9 @@ outskirt of the domain. **A good exploration strategy is often dataset specific,
 there is no clear winner**.
 
 Finally, the **pertinence of a sample for the task is often related to the
-training dynamic of a specific model**. A data point might be selected because it lie
+training dynamic of a specific model**. A data point might be selected because it lies
 on the decision boundary of a model (high uncertainty).
-But, a different model would have place this boundary somewhere else and query
+But, a different model would have placed this boundary somewhere else and queried
 different data points. Even worse, an item might be considered very
 informative in the early step of the process but it might become irrelevant when new
 annotations get added. **This greedy strategy is therefore dependent on
@@ -120,7 +129,8 @@ learning is no longer the only technique to achieve good results.
 The recent surge of research in unsupervised, semi-supervised, and self-supervised learning
 leads to a rapidly decreasing performance gap with supervised techniques. These approaches
 leverage huge amounts of unlabeled data; the more we feed them the better they get.
-**Labeling all of the samples might be impossible but not utilizing them is a waste**.
+**Labeling all of the samples might be impossible but not utilizing the unlabeled
+ones is a waste**.
 
 
 ### The low return on investment
@@ -132,18 +142,18 @@ to fully annotate or they might require an expert eye, which is often scarce and
 If that is the case, the dataset breaks the assumption of constant cost per sample
 which might not yield the expected gain.
 
-In addition, the benefits get thinner because active learning requires a lot
+In addition, the benefits are minimized because active learning requires a lot
 of computations. Every time a new batch of data gets annotated a new training
 is started. This successive retraining on ever-growing datasets tends to increase drag costs.
-If not taken into account upfront, **the computational costs can eat all the savings
+If not considered upfront, **the computational costs can eat all the savings
 or make it more expensive than traditional annotation methods**. These computational
 costs are not reported in academic publications.
 
 On top of this, time is no longer a constraint. **The labeling industry
 scale vertically really well** by hiring thousands of workers all around the world.
 Suppose you retrain your model every 24h, querying enough data for a full day of
-work for hundreds of annotators represent a challenge for any active learning
-method. As batches get bigger they bring less and less information per sample.
+work for hundreds of annotators represents a challenge for any active learning
+methods. As batches get bigger they bring less and less information per sample.
 
 Finally, **most of the costs induced by active learning are from implementation,
 experiment tracking, version control, automation, maintenance, etc**.
@@ -161,12 +171,12 @@ data poisoning
 
 ## When to use active learning?
 
-In this post, my goal was to depict active learning in a less romanticized way than
+This post aims to depict active learning in a less romanticized way than
 what you usually find in blogposts and scientific publications. Despite the numerous
-limitations I listed, I think active learning is a necessity for some projects.
-It's just that it should not be used the way it was originally intended.
+limitations I listed, I think active learning is a necessity for some projects;
+however, it should not be used the way it was originally intended.
 
-In my opinion, **Active Learning should not be used to bootstrap a dataset**
+In my opinion, **Active Learning be applied when bootstrapping a dataset**
 to reduce cost or to have a faster time to model release. These techniques
 only **outweigh the drawbacks when building enormous datasets at scale or when
 tackling the long tail distribution of edge cases.** Ignoring the tail of edge cases
@@ -174,7 +184,7 @@ can be detrimental for some companies.
 
 <h4 class="no_toc">The data infrastructure comes first</h4>
 
-As briefly discussed before, the infrastructure to support fast iteration and curation of
+As briefly discussed before, the infrastructure to support fast iterations and curation of
 the data is a key component for a successful data strategy. This means the company
 needs to invest a lot in its tooling and automation for the data pipeline.
 These investments in themselves should be beneficial by speeding up delivery, reducing
@@ -206,15 +216,23 @@ to boost performances.
 The fact that there is a logarithmic relationship between the number of samples and
 the performances is related to the distribution of edge cases. The real world is messy
 and therefore all machine learning problems have a long tail distribution of data
-(very very long tail for most tasks).
-A16z has a very interesting blog on this topic:
-[Taming the Tail: Adventures in Improving AI Economics](https://a16z.com/2020/08/12/taming-the-tail-adventures-in-improving-ai-economics/). The takeaway is to tackle the long tail
-distribution is to optimize the model, narrow down the problem or the input, and
+(a VERY long tail for most tasks) as illustrated below. As the number
+of sample decreases so does the performances.
+A16z has a fascinating blog on this topic:
+[Taming the Tail: Adventures in Improving AI Economics](https://a16z.com/2020/08/12/taming-the-tail-adventures-in-improving-ai-economics/).
+The takeaway is to tackle the long tail
+distribution, one should optimize the model, narrow down the problem, and
 get more data from customers.
 
+
+<figure>
+  <img src="/assets/img/long-tail-distribution.svg" alt="Long tail distribution illustration">
+</figure>
+
 Another solution is to **be more selective when building the training set**.
+The goal is to change the prevalence of observations through a careful selection.
 Rather than including all possible data points and hoping for the best, it's time
-to optimize for the quality of samples. This is where active learning thrive!
+to optimize for the quality of samples. This is where active learning thrives!
 It helps identify underrepresented cases where the model struggles,
 and it discards samples related to already learned concepts.
 
@@ -229,6 +247,9 @@ a machine learning technique to chase the last few points of accuracy**.
 
 These techniques, should identify gaps in the datasets, balance data distribution, and
 most importantly close the feedback loop. With active learning, it becomes easier to
-identify the failure modes of the model. This feedbacks become some insights
-for the exploration and curation of the data. Then they become ad hoc rules for adding
-specific samples to the training set.
+identify the failure modes of the model. This assessments provide insights
+for the exploration and curation of the data, and finally, become ad hoc rules for adding
+specific samples to the training set. Being pro-active on the discovery of infrequent
+samples is utterly important for most real world applications like self-driving cars
+and healthcare.
+
