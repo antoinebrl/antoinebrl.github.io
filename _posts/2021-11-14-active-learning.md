@@ -162,13 +162,6 @@ is a branch of machine learning. These operations are done
 by skilled and highly paid ML scientists and ML engineers.
 
 
-### Unsure what you will end up with
-
-biased
-
-data poisoning
-
-
 ## When to use active learning?
 
 This post aims to depict active learning in a less romanticized way than
@@ -252,4 +245,11 @@ for the exploration and curation of the data, and finally, become ad hoc rules f
 specific samples to the training set. Being pro-active on the discovery of infrequent
 samples is utterly important for most real world applications like self-driving cars
 and healthcare.
+
+
+## Related Readings
+
+- [Waymo Blog - Seeing is Knowing: Advances in search and image recognition train Waymo’s self-driving technology for any encounter](https://blog.waymo.com/2020/02/content-search.html)
+- [Andrej Karpathy's (Tesla) talk at CVPR'21 - Workshop on autonomous driving](https://www.youtube.com/watch?v=g6bOwQdCJrc)
+- [Cruise’s Continuous Learning Machine Predicts the Unpredictable on San Francisco Roads](https://medium.com/cruise/cruise-continuous-learning-machine-30d60f4c691b)
 
