@@ -1,4 +1,4 @@
 serve:
-	bundle exec jekyll serve --unpublished --future --livereload
+	bundle exec jekyll serve --watch --unpublished --future --livereload
 
 .PHONY: serve
