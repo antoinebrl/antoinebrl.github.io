@@ -11,7 +11,7 @@ highlighter: rouge
 plugins: [jekyll-paginate, jekyll-toc]
 paginate: 10
 
-exclude: [node_modules, .bundle, .vendor, .sass-cache, .idea, .git, .github]
+exclude: [node_modules, .bundle, .vendor, vendor, .sass-cache, .idea, .git, .github]
 
 # includes_dir:
 #  - "_includes"
