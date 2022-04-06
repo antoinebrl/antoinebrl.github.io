@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Landing on Mars with Reinforcement Learning
+title: Learning to Land on Mars
 date: 2022-02-06 15:14:00 +0100
 toc: true
 description: "Once in a while, a friend who is either learning
