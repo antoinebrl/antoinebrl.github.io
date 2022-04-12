@@ -1,4 +1,4 @@
-name: Build and deploy Jekyll site to GitHub Pages
+name: Build and deploy Jekyll site to GitHub Pages + Update README.md with latest blog posts
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   github-pages:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -19,3 +19,22 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           target_branch: 'gh-pages'
+  
+  update-readme:
+    needs: github-pages
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - run: |
+          echo '<link rel="stylesheet" type="text/css" media="all" href="https://antoinebrl.github.io/css/style.css"/>' > README.md
+          sleep 60
+          curl https://antoinebrl.github.io/ | awk 'f{if ($0=="</div>") exit; print} $0=="   <div class=\"content\">"{f=1}' | tr -d '\n' | sed 's/> *</></g' | sed 's/<a class="post-link" href="\//<a href="https\:\/\/antoinebrl.github.io\//g' >> README.md
+          echo '</div></div>' >> README.md
+      - name: Commit & Push changes
+        uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: master
