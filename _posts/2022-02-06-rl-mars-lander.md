@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Learning to Land on Mars
+title: Learning to Land on Mars with Reinforcement Learning
 date: 2022-02-06 15:14:00 +0100
 toc: true
 description: "Once in a while, a friend who is either learning
@@ -16,7 +16,7 @@ Mars with reinforcement learning."
 
 ## CodinGame Mars Lander
 
-[This game's](https://www.codingame.com/multiplayer/optimization/mars-lander),
+[This game's](https://www.codingame.com/multiplayer/optimization/mars-lander)
 goal is to land the spacecraft while using as few propellants as possible.
 The mission is only successful if the rover reaches a flat ground,
 at a low speed, without any tilt.
@@ -369,7 +369,7 @@ I can finally send a this elegant solution as the code is now only 75k chars lon
 
 I had one more trick in my sleeve in case base64 was insufficient. So far I have only been
 using chars contained in the [ASCII table](https://en.wikipedia.org/wiki/ASCII). The hack is to
-group two consecutive utf-8 chars into one utf-16 chars. It's way less readable and practible but we get
+group two consecutive utf-8 chars into one utf-16 char. It's way less readable and practible but we get
 another 50% reduction! Look at this monstrosity:
 
 ```python
