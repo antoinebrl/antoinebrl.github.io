@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7"><![endif]-->
+<!--[if IE 7]><html class="no-js lt-ie9 lt-ie8" <![endif]-->
+<!--[if IE 8]><html class="no-js lt-ie9" <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <title>Deep (Deep, Deep) Dive into K-Means Clustering</title>
+
+    <!-- Open Graph Meta -->
+    <meta content="Antoine Broyelle" property="og:site_name">
+    
+      <meta content="Deep (Deep, Deep) Dive into K-Means Clustering" property="og:title">
+    
+    
+      <meta content="article" property="og:type">
+    
+    
+      <meta content="Recently, my interest in outlier detection and clustering techniques spiked. The rabbit hole was deeper than anticipated! Let's first talk about <i>k-means</i> clustering. For completeness, I provide a high-level description of the algorithm, some step-by-step animations, a few equations for math lovers, and a Python implementation using Numpy. Finally, I cover the limitations and variants of <i>k-means</i>. You can scroll to the end if you want to test your understanding with some typical interview questions." property="og:description">
+    
+    
+      <meta content="https://antoinebrl.github.io//blog/kmeans/" property="og:url">
+    
+    
+      <meta content="2021-01-27T00:00:00+00:00" property="article:published_time">
+      <meta content="https://antoinebrl.github.io//about/" property="article:author">
+    
+    
+      <meta content="https://antoinebrl.github.io//assets/img/lights.jpg" property="og:image">
+    
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@antbrl">
+    <meta name="twitter:creator" content="@antbrl">
+    
+      <meta name="twitter:title" content="Deep (Deep, Deep) Dive into K-Means Clustering">
+    
+    
+      <meta name="twitter:url" content="https://antoinebrl.github.io//blog/kmeans/">
+    
+    
+      <meta name="twitter:description" content="Recently, my interest in outlier detection and clustering techniques spiked. The rabbit hole was deeper than anticipated! Let's first talk about <i>k-means</i> clustering. For completeness, I provide a high-level description of the algorithm, some step-by-step animations, a few equations for math lovers, and a Python implementation using Numpy. Finally, I cover the limitations and variants of <i>k-means</i>. You can scroll to the end if you want to test your understanding with some typical interview questions.">
+    
+    
+      <meta name="twitter:image:src" content="https://antoinebrl.github.io//assets/img/lights.jpg">
+    
+
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon/favicon.ico" />
+
+    <!-- Come and get me RSS readers -->
+    <link rel="alternate" type="application/rss+xml" title="Antoine Broyelle" href="https://antoinebrl.github.io//feed.xml" />
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!--[if IE 8]><link rel="stylesheet" href="/assets/css/ie.css"><![endif]-->
+    <link rel="canonical" href="https://antoinebrl.github.io//blog/kmeans/">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,800&display=swap" rel="preload">
+    <link href="https://fonts.googleapis.com/css?family=PT+Serif:400,700,400italic,700italic&display=swap" rel="preload">
+    <link href="https://fonts.googleapis.com/css?family=Crimson+Text&display=swap" rel="preload">
+
+    <!-- Modernizr -->
+<!--    <script src="/assets/js/modernizr.custom.15390.js" type="text/javascript"></script>-->
+
+    
+</head>
+
+
+<body>
+
+    <div class="header">
+     <div class="container">
+         <h1 class="logo"><a href="/">Antoine Broyelle</a></h1>
+         <nav class="nav-collapse">
+             <ul class="noList">
+                 
+                 <li class="element first  last">
+                     <a href="/index.html">Home</a>
+                 </li>
+                 
+             </ul>
+         </nav>
+     </div>
+ </div><!-- end .header -->
+
+
+   <div class="content">
+      <div class="container">
+         <div class="post">
+  
+  <h1 class="postTitle">Deep (Deep, Deep) Dive into K-Means Clustering</h1>
+  <p class="meta">January 27, 2021</p>
+
+  
+  <p>Recently, my interest in outlier detection and clustering techniques spiked. The rabbit hole was deeper than anticipated! Let's first talk about <i>k-means</i> clustering. For completeness, I provide a high-level description of the algorithm, some step-by-step animations, a few equations for math lovers, and a Python implementation using Numpy. Finally, I cover the limitations and variants of <i>k-means</i>. You can scroll to the end if you want to test your understanding with some typical interview questions.</p>
+  <div id="table-of-contents">
+    <ul id="toc" class="section-nav">
+<li class="toc-entry toc-h2"><a href="#the-k-means-algorithm">The K-Means Algorithm</a></li>
+<li class="toc-entry toc-h2"><a href="#visualization">Visualization</a></li>
+<li class="toc-entry toc-h2"><a href="#python-implementation-using-numpy">Python Implementation using Numpy</a></li>
+<li class="toc-entry toc-h2"><a href="#limitations-and-variants">Limitations and Variants</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#sensitivity-to-initialization">Sensitivity to Initialization</a></li>
+<li class="toc-entry toc-h3"><a href="#computational-time-complexity">Computational Time Complexity</a></li>
+<li class="toc-entry toc-h3"><a href="#sensitivity-to-outliers">Sensitivity to Outliers</a></li>
+<li class="toc-entry toc-h3"><a href="#shape-and-extent-of-clusters">Shape and Extent of Clusters</a></li>
+<li class="toc-entry toc-h3"><a href="#optimal-number-of-clusters">Optimal Number of Clusters</a>
+<ul>
+<li class="toc-entry toc-h4"><a href="#the-elbow-method">The Elbow Method</a></li>
+<li class="toc-entry toc-h4"><a href="#gap-statistic">Gap Statistic</a></li>
+<li class="toc-entry toc-h4"><a href="#silhouette-analysis">Silhouette Analysis</a></li>
+<li class="toc-entry toc-h4"><a href="#measures-of-information">Measures of Information</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#conclusion">Conclusion</a></li>
+<li class="toc-entry toc-h2"><a href="#interview-questions">Interview Questions</a></li>
+</ul>
+  </div>
+  <div id="markdown-content">
+    <script type="text/javascript" src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+
+<script type="text/x-mathjax-config">
+MathJax = {
+  loader: {load: ['[tex]/color']},
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)'], ['\\[', '\\]']],
+    packages: {'[+]': ['color']}
+  },
+  svg: {
+    fontCache: 'glo\(( bal',
+    linebreak: 
+      automatic: true
+  }
+};
+</script>
+
+<script type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+<script type="text/javascript" src="https://d3js.org/d3.v6.min.js"></script>
+
+<style>
+.MathJax {
+  overflow-x:auto;
+}
+svg.animation {
+  box-shadow: 0 10px 16px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19) !important;
+}
+figure {
+  text-align: center;
+  margin: 0.5rem auto 2rem auto !important;
+}
+</style>
+
+<h2 class="no_toc">Introduction</h2>
+
+<p><strong>Clustering is the task of grouping similar-looking data points into subsets</strong>.
+Such a group is called a cluster.
+Data points within the same cluster should look alike or share similar
+properties compared to items in other clusters.</p>
+
+<p><strong>Clustering is an <a href="https://en.wikipedia.org/wiki/Unsupervised_learning">unsupervised learning</a> technique</strong>
+mainly used for data exploration, data mining, and information compression through quantization.
+All clustering algorithms have to find patterns in the data by themselves, as it comes without any labels.
+The consequence is that the notion of a “good cluster” depends on the use case and is somewhat subjective.
+Over the years, this has led to the development of hundreds of algorithms, each with
+their own merits and drawbacks.</p>
+
+<p><strong><em>K-means</em> is a centroid model</strong> -each cluster is represented by a central point.
+“K” represents the number of clusters, and “mean” is the aggregation operation
+applied to elements of a cluster to define the central location. 
+<strong>Central points are called <em>centroids</em> or <em>prototypes</em> of the clusters</strong>.</p>
+
+<figure>
+  <img src="/assets/img/voronoi_k3.png" alt="Voronoi cells, k=3" style="max-width:300px" />
+  <figcaption>Fig. 1 — Illustration of centroid clustering.
+	<br />Black dots represent data points, coloured dots are centroids,
+	<br />and coloured areas show cluster expansions.</figcaption>
+</figure>
+
+<h2 id="the-k-means-algorithm">The <em>K-Means</em> Algorithm</h2>
+
+<p>From a theoretical perspective, finding the optimal solution for a clustering problem
+is particularly difficult (NP-hard). Thus, <strong>all algorithms are only approximations
+of the optimal solution</strong>. The <em>k-means</em> algorithm, sometimes referred to as the Lloyd
+algorithm after its author <a class="citation" href="#lloyd1982least">(Lloyd, 1982)</a>,
+is an <strong>iterative process that refines the solution until it
+converges to a local optimum</strong>.</p>
+
+<p>Let’s use some mathematical notations to formalize this:</p>
+<ul>
+  <li>\( X = \{ \textbf{x}_1, \, \ldots ,\; \textbf{x}_n ;\, \textbf{x}_j \in \mathbb{R}^d \} \)
+denotes the set of data points of dimensions \( d \).</li>
+  <li>\( C = \{ \textbf{c}_1, \, \ldots ,\; \textbf{c}_k ;\, \textbf{c}_i \in \mathbb{R}^d \} \)
+is the set of centroids.</li>
+  <li>\( S = \{ S_1, \, \ldots ,\, S_k \} \) represents the groupings where \( S_i \)
+is the set of data points contained in the cluster \( i \). The number of samples in \( S_i \) is noted \( n_i \).</li>
+</ul>
+
+<p>Notations can have superscripts to illustrate the iterative aspect of the algorithm.
+For example, \( C^t = \{ \textbf{c}^t_1,\,  … ,\, \textbf{c}^t_k \} \) defines the centroids at step \( t \).</p>
+
+<p><strong>Given some data points and the number of clusters,
+the goal is to find the optimal centroids —those which minimize the within-cluster distance—
+also called the within-cluster sum squared error (SSE)</strong>:</p>
+
+<p>\[ C_{best} = \underset{C}{\arg\min}  \sum_{i=1}^{k} \sum_{\textbf{x} \in S_i} \lVert \textbf{x} - \textbf{c}_i \rVert^2 \]</p>
+
+<p>The training procedure is as follows:</p>
+
+<ol>
+  <li>
+    <p><strong>Initialization</strong>:
+Often, there is no good prior knowledge about the location of the centroids.
+An effortless way to start is to define the centroids by randomly selecting
+\( k \) data points from the dataset (Forgy method).
+<br />In mathematical notation, we define \( C^0 \), the initial set of centroids,
+as a subset of data points with a cardinality of \( k \):
+\( C^0 \subset X \) with \( \vert C^0 \vert = k \).</p>
+  </li>
+  <li>
+    <p><strong>Assignment</strong>:
+For each data point, the distance to all centroids is computed.
+The data points belong to the cluster represented by the closest centroid.
+This is called a <strong><em>hard assignment</em> because the data point belongs to one and only one cluster</strong>.
+<br />Data points are assigned to partitions as follows:
+\[ S^t_i = \{\textbf{x} \in X  ;\; \lVert \textbf{x} - \textbf{c}_i \rVert &lt; \lVert \textbf{x} - \textbf{c}_j \rVert, \; \forall 1 \leq j \leq k \} \]</p>
+  </li>
+  <li>
+    <p><strong>Update</strong>:
+Given all the points assigned to a cluster, the mean position is computed
+and defines the new location of the centroid. All centroids are updated simultaneously.
+\[ \forall 1\le i \le k, \,\, \textbf{c}^{t+1}_i = \frac{1}{\vert S^t_i \vert } \sum_{\textbf{x} \in S^t_i}{\textbf{x}} \]</p>
+  </li>
+  <li>
+    <p><strong>Repeat steps 2 and 3 until convergence</strong>.
+The algorithm can stop after a predefined number of iterations.
+Another convergence criterion could be to stop whenever
+the centroids move less than a certain threshold during step 3.</p>
+  </li>
+</ol>
+
+<p>Once the algorithm has converged and is used on new data, only the assignment step is
+performed.</p>
+
+<h2 id="visualization">Visualization</h2>
+<hr />
+
+<div>
+<div style="text-align: center;">
+    Number of clusters \(k\): 
+    <input type="number" id="nb-clusters" value="3" min="1" style="width:100px;" />
+</div>
+<div style="text-align: center;margin-bottom: 2rem;">
+  <img id="data-0" src="/assets/img/data0.png" alt="data 0" style="width:100px;height:100px;box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);margin-bottom:0" />
+  <img id="data-1" src="/assets/img/data1.png" alt="data 0" style="width:100px;height:100px;box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);margin-bottom:0" />
+  <img id="data-2" src="/assets/img/data2.png" alt="data 0" style="width:100px;height:100px;box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);margin-bottom:0" />
+  <img id="data-3" src="/assets/img/data3.png" alt="data 0" style="width:100px;height:100px;box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);margin-bottom:0" />
+  <img id="data-4" src="/assets/img/data4.png" alt="data 0" style="width:100px;height:100px;box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);margin-bottom:0" />
+  <img id="data-5" src="/assets/img/data5.png" alt="data 0" style="width:100px;height:100px;box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);margin-bottom:0" />
+</div>
+<div style="text-align: center;">
+  <button id="btn-run" class="button__outline">Run 10 iterations</button>
+</div>
+<div id="container" style="text-align: center;"></div>
+</div>
+<hr />
+
+<script language="javascript">
+
+// Transform 2-D standard normal data
+function sample2DNormal(mu, sig){
+    // Perform Cholesky decomposition$primary
+    const a = Math.sqrt(sig[0][0]);
+    const b = sig[0][1] / a;
+    const c = Math.sqrt(sig[1][1] - b * b);
+    const sqrtSig = [[a, 0], [b, c]];
+
+    // Get random point
+    const stdNorm = d3.randomNormal(0, 1);
+    const u = [stdNorm(), stdNorm()];
+
+    // Transform
+    const v = {};
+    v.x = mu[0] + sqrtSig[0][0] * u[0] + sqrtSig[0][1] * u[1];
+    v.y = mu[1] + sqrtSig[1][0] * u[0] + sqrtSig[1][1] * u[1];
+
+    return v;
+}
+
+function l2dist(a, b) {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    return Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+}
+
+function findClosestCentroid(point, centroids) {
+    let closest = {i: -1, distance: 100000};
+    centroids.forEach(function(d, i) {
+        const distance = l2dist(d, point);
+        if (distance < closest.distance) {
+            closest.i = i;
+            closest.distance = distance;
+        }
+    });
+    return closest.i;
+}
+
+const w = 320;
+const h = 320;
+const pad = 5;
+let k = 3;
+let iter = -1;
+
+// Define plot scale
+const xScale = d3.scaleLinear()
+    .domain([-10, 10])
+    .range([pad, w-pad]);
+const yScale = d3.scaleLinear()
+    .domain([-10, 10])
+    .range([pad, h-pad]);
+
+const svg = d3.select("#container")
+  .append("svg")
+  .attr("class", "animation")
+  .attr("width", w)
+  .attr("height", h)
+  .style("text-align", "center");
+
+d3.select("#nb-clusters").attr("value", k).on("input", function() {
+    while (this.value < k) {
+        centroids.pop();
+        k = k - 1;
+    }
+    if (this.value > k) {
+        centroids = centroids.concat(select_centroids(data, this.value - k));
+        k = this.value;
+    }
+    svg.selectAll(".centroid")
+        .data(centroids)
+        .exit()
+        .remove();
+    draw_centroids(centroids);
+    if (iter == 0) {
+        iter = 10;
+        start();
+    }
+})
+
+function draw_data(data) {
+    const d = svg.selectAll(".data").data(data)
+    d.exit()
+     .transition()
+     .duration(100)
+     .attr("r", 0)
+    d.enter()
+     .append("circle")
+     .merge(d)
+     .attr("class", "data")
+     .attr("cx", d => d.x)
+     .attr("cy", d => d.y)
+     .attr("r", 0)
+     .transition()
+     .duration(150)
+     .attr("r", 4)
+     .transition()
+     .duration(150)
+     .attr("r", 3)
+}
+
+let data = []
+
+d3.select("#data-0").on("click", function() {
+    let points = []
+    points = points.concat(d3.range(80).map(function() {
+        return sample2DNormal([-5, -5], [[4, 0], [0, 4]]);
+    }));
+    points = points.concat(d3.range(80).map(function() {
+        return sample2DNormal([5, 5], [[4, 0], [0, 4]]);
+    }));
+    points = points.concat(d3.range(80).map(function() {
+        return sample2DNormal([5, -5], [[4, 0], [0, 4]]);
+    }));
+    points = points.concat(d3.range(80).map(function() {
+        return sample2DNormal([-5, 5], [[4, 0], [0, 4]]);
+    }));
+    data = points.map(d => ({x: xScale(d.x), y: yScale(d.y)}));
+    remove_visual_annotations();
+    draw_data(data);
+    if (iter == 0) {
+        iter = 10;
+        start();
+    }
+}).dispatch('click');
+
+//d3.select("#data-1").on("click", function() {
+//    let points = []
+//    points = points.concat(d3.range(50).map(i => sample2DNormal([-3, -3], [[3, -2], [-2, 3]])));
+//    points = points.concat(d3.range(50).map(i => sample2DNormal([ 5, -2], [[2, -1], [-1, 2]])));
+//    points = points.concat(d3.range(50).map(i => sample2DNormal([ 0,  3], [[2,  0], [ 0, 2]])));
+//    data = points.map(d => ({x: xScale(d.x), y: yScale(d.y)}));
+//    draw_data(data);
+//    if (iter == 0) {
+//        iter = 10;
+//        start();
+//    }
+//});
+d3.select("#data-1").on("click", function() {
+    let points = []
+    points = points.concat(d3.range(80).map(function() {
+        return sample2DNormal([-5.5, 0], [[0.2, 0], [0, 7]]);
+    }));
+    points = points.concat(d3.range(80).map(function() {
+        return sample2DNormal([1.5, 0], [[7, 0], [0, 0.2]]);
+    }));
+    data = points.map(d => ({x: xScale(d.x), y: yScale(d.y)}));
+    remove_visual_annotations();
+    draw_data(data);
+    if (iter == 0) {
+        iter = 10;
+        start();
+    }
+});
+
+d3.select("#data-2").on("click", function() {
+    let points = []
+    points = points.concat(d3.range(90).map(function(i) {
+        noise = sample2DNormal([0,0], [[0.15, 0], [0, 0.15]]);
+        const r = 7;
+        const rad = i * 4 / 180 * Math.PI;
+        return { x: r * Math.cos(rad) + noise.x, y : r * Math.sin(rad) + noise.y} 
+    }));
+    points = points.concat(d3.range(20).map(i => sample2DNormal([-2, -1.75], [[0.5, 0], [0, 0.5]])));
+    points = points.concat(d3.range(20).map(i => sample2DNormal([2, -1.75], [[0.5, 0], [0, 0.5]])));
+    points = points.concat(d3.range(30).map(function(i) {
+        noise = sample2DNormal([0,0], [[0.15, 0], [0, 0.15]]);
+        const r = 3.5;
+        const rad = i * 4 / 180 * Math.PI + Math.PI / 6;
+        return { x: r * Math.cos(rad) + noise.x, y : r * Math.sin(rad) + noise.y} 
+    }));
+    data = points.map(d => ({x: xScale(d.x), y: yScale(d.y)}));
+    remove_visual_annotations();
+    draw_data(data);
+    if (iter == 0) {
+        iter = 10;
+        start();
+    }
+});
+
+d3.select("#data-3").on("click", function() {
+    let points = []
+    points = points.concat(d3.range(90).map(function(i) {
+        noise = sample2DNormal([0,0], [[0.15, 0], [0, 0.15]]);
+        const r = 7;
+        const rad = i * 4 / 180 * Math.PI;
+        return { x: r * Math.cos(rad) + noise.x, y : r * Math.sin(rad) + noise.y} 
+    }));
+    points = points.concat(d3.range(45).map(function(i) {
+        noise = sample2DNormal([0,0], [[0.15, 0], [0, 0.15]]);
+        const r = 3;
+        const rad = i * 8 / 180 * Math.PI;
+        return { x: r * Math.cos(rad) + noise.x, y : r * Math.sin(rad) + noise.y} 
+    }));
+    data = points.map(d => ({x: xScale(d.x), y: yScale(d.y)}));
+    remove_visual_annotations();
+    draw_data(data);
+    if (iter == 0) {
+        iter = 10;
+        start();
+    }
+});
+
+
+d3.select("#data-4").on("click", function() {
+    let points = []
+    points = points.concat(d3.range(45).map(function(i) {
+        noise = sample2DNormal([-2.75,-1], [[0.15, 0], [0, 0.30]]);
+        const r = 6;
+        const rad = i * 4 / 180 * Math.PI;
+        return { x: r * Math.cos(rad) + noise.x, y : r * Math.sin(rad) + noise.y} 
+    }));
+    points = points.concat(d3.range(45).map(function(i) {
+        noise = sample2DNormal([2.75,1], [[0.15, 0], [0, 0.30]]);
+        const r = 6;
+        const rad = i * 4 / 180 * Math.PI + Math.PI;
+        return { x: r * Math.cos(rad) + noise.x, y : r * Math.sin(rad) + noise.y} 
+    })); 
+    data = points.map(d => ({x: xScale(d.x), y: yScale(d.y)}));
+    remove_visual_annotations();
+    draw_data(data);
+    if (iter == 0) {
+        iter = 10;
+        start();
+    }
+});
+
+
+d3.select("#data-5").on("click", function() {
+    let points = []
+    points = points.concat(d3.range(60).map(function(i) {
+        return {x: d3.randomUniform(-2, 2)(), y: d3.randomUniform(-2, 2)()}
+    }).filter(
+        d => Math.sqrt(d.x * d.x + d.y * d.y) < 2
+    ).map(
+        d => ({x: d.x + 5, y: d.y - 4})
+    ));
+    points = points.concat(d3.range(60).map(function(i) {
+        return {x: d3.randomUniform(-2, 2)(), y: d3.randomUniform(-2, 2)()}
+    }).filter(
+        d => Math.sqrt(d.x * d.x + d.y * d.y) < 2
+    ).map(
+        d => ({x: d.x - 5, y: d.y - 4})
+    ));
+    points = points.concat(d3.range(200).map(function(i) {
+        return {x: d3.randomUniform(-5, 5)(), y: d3.randomUniform(-5, 5)() + 1}
+    }).filter(
+        d => Math.sqrt(d.x * d.x + d.y * d.y) < 5
+    ).map(
+        d => ({x: d.x, y: d.y + 1})
+    ));
+    data = points.map(d => ({x: xScale(d.x), y: yScale(d.y)}));
+    remove_visual_annotations();
+    draw_data(data);
+    if (iter == 0) {
+        iter = 10;
+        start();
+    }
+});
+
+
+
+function draw_centroids(centroids) {
+    svg.selectAll(".centroid")
+        .data(centroids)
+        .enter()
+        .append("circle")
+        .attr("class", "centroid")
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y)
+        .style("fill", (d, i) => colors(i))
+        .style("stroke", "black")
+        .style("stroke-width", 2)
+        .attr("r", 0)
+        .transition()
+        .duration(150)
+        .attr("r", 8)
+        .transition()
+        .duration(150)
+        .attr("r", 6);
+}
+
+function draw_cluster_assignment(data) {
+    svg.selectAll(".line")
+        .data(data)
+        .enter()
+        .append("line")
+        .attr("class", "line")
+        .attr("x1", d => d.x)
+        .attr("y1", d => d.y)
+        .attr("x2", d => d.x)
+        .attr("y2", d => d.y)
+        .style("stroke", d => colors(d.cluster))
+        .style("stroke-opacity", 0.4)
+        .transition()
+        .delay(d => Math.random() * 500)
+        .duration(300)
+        .attr("x2", d => centroids[d.cluster].x)
+        .attr("y2", d => centroids[d.cluster].y)
+
+    svg.selectAll(".data")
+        .transition()
+        .delay(d => Math.random() * 500)
+        .duration(100)
+        .style("fill", (d, i) => colors(d.cluster));
+}
+
+function draw_centroids_update(new_centroids) {
+    svg.selectAll(".centroid")
+       .data(new_centroids)
+       .transition()
+       .delay(750)
+       .duration(500)
+       .attr("cx", d => d.x)
+       .attr("cy", d => d.y)
+
+    svg.selectAll(".line")
+       .data(data)
+       .transition()
+       .delay(750)
+       .duration(500)
+       .attr("x2", d => new_centroids[d.cluster].x)
+       .attr("y2", d => new_centroids[d.cluster].y)
+}
+
+function remove_visual_annotations() {
+    svg.selectAll(".line")
+       .data(data)
+       .transition()
+       .delay(1500)
+       .style("stroke-opacity", 0)
+       .remove()
+
+    svg.selectAll(".data")
+       .data(data)
+       .transition()
+       .delay(1500)
+       .style("fill", "black")
+
+}
+
+function select_centroids(data, k) {
+    return d3.range(k).map(function() {return data[Math.floor(Math.random() * data.length)]});
+}
+
+function assign_cluster(data, centroids) {
+    data.forEach(d => d.cluster = findClosestCentroid(d, centroids));
+}
+
+function compute_centroids(k) {
+    centroids = d3.range(k).map(function(i) {
+        const points_in_cluster = data.filter(d => d.cluster == i)
+        return {
+          x: d3.mean(points_in_cluster.map(d => d.x)),
+          y: d3.mean(points_in_cluster.map(d => d.y))
+        };
+    });
+    return centroids;
+}
+
+var colors = d3.scaleOrdinal().domain(d3.range(k)).range(d3.schemeCategory10);
+let centroids = [];
+draw_data(data, svg);
+
+play_layer = svg.append("g"); 
+play_layer.append("rect")
+  .attr("width", "100%")
+  .attr("height", "100%")
+  .attr("fill", "white")
+  .attr("fill-opacity", 0.5)
+play_layer.append("path")
+  .attr("d", d3.symbol().type(d3.symbolTriangle).size(4000))
+  .attr("fill", "black")
+  .attr("transform", function(d) { 
+    return "rotate(-30) translate(50, 200)";
+  });
+
+function animate() {
+    const delaunay = d3.Delaunay.from(centroids, d => d.x, d => d.y);
+    const voronoi = delaunay.voronoi([0, 0, w, h]);
+    let v = svg.selectAll(".voronoi")
+        .data(centroids);
+    v.enter()
+        .append("path")
+        .attr("class", "voronoi")
+        .attr("d", (d, i) => voronoi.renderCell(i))
+        .attr("fill-opacity", 0.25)
+        .attr("fill", (d, i) => colors(i))
+        .attr("stroke", "white")
+        .attr("stroke-width", 0.5);
+    v.exit().remove();
+    v.transition()
+        .duration(1000)
+        .attr("d", (d, i) => voronoi.renderCell(i))
+
+    assign_cluster(data, centroids);
+    draw_cluster_assignment(data);
+    centroids = compute_centroids(k);
+    draw_centroids_update(centroids);
+    remove_visual_annotations();
+    iter = iter - 1;
+    if (iter > 0) {
+        svg.transition().delay(2000).on("start", animate);
+    }
+}
+
+function start(){
+    iter = 10;
+    play_layer.remove()
+    if (centroids.length == 0){
+        centroids = select_centroids(data, k);
+    }
+    draw_centroids(centroids, svg);
+    animate()
+};
+svg.on("click", start);
+d3.select("#btn-run").on("click", start);
+</script>
+
+<p><br />
+It is possible to visualize the decision boundaries.
+To do so, we can generalize the definitions of the groups and include all possible elements rather than
+only observed data points:
+\[ S_i = \{\textbf{x} \in \mathbb{R}^d  ;\; ||\textbf{x} - \textbf{c}_i || &lt; || \textbf{x} - \textbf{c}_j ||, \; \forall 1 \le j \le k \} \]
+These are called <a href="https://en.wikipedia.org/wiki/Voronoi_diagram">Voronoi cells</a>, and they look like this:</p>
+<figure>
+  <img src="/assets/img/voronoi_k2.png" alt="Voronoi cells, k=2" style="max-width:300px;display:inline-block;width:32%;" />
+  <img src="/assets/img/voronoi_k3.png" alt="Voronoi cells, k=3" style="max-width:300px;display:inline-block;width:32%;" />
+  <img src="/assets/img/voronoi_k5.png" alt="Voronoi cells, k=5" style="max-width:300px;display:inline-block;width:32%;position: center;" />
+  <figcaption>Fig. 2 - Voronoi cells with k=2 (left), k=3 (middle) and k=5 (right).</figcaption>
+</figure>
+
+<h2 id="python-implementation-using-numpy">Python Implementation using Numpy</h2>
+
+<p>Although the algorithm could be implemented with plenty of nested for loops,
+it can execute several orders of magnitude faster if we leverage matrix arithmetic.
+Numpy <a class="citation" href="#harris2020array">(Harris et al., 2020)</a> is an <a href="https://numpy.org/">open-source Python library</a>
+designed to ease the manipulation of vectors, matrices and arrays of any dimension.
+The core operations are written in C, a low-level language, to achieve fast runtime.</p>
+
+<p>You can use <code class="language-plaintext highlighter-rouge">conda</code> or <code class="language-plaintext highlighter-rouge">pip</code> package managers to install Numpy.
+<br /> conda: <code class="language-plaintext highlighter-rouge">conda install numpy</code>
+<br /> pip: <code class="language-plaintext highlighter-rouge">pip install numpy</code></p>
+
+<p>Let’s start by importing Numpy and creating some synthetic data generated from three normal distributions.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+<span class="n">blob1</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]],</span> <span class="n">size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">blob2</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span> <span class="n">size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">blob3</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">],</span> <span class="n">cov</span><span class="o">=</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span> <span class="n">size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">blob1</span><span class="p">,</span> <span class="n">blob2</span><span class="p">,</span> <span class="n">blob3</span><span class="p">])</span>
+</code></pre></div></div>
+
+<p>The next step is to define a function for each step of the algorithm.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">pick_centroids</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="n">indexes</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">centroids</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">indexes</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">centroids</span>
+
+<span class="k">def</span> <span class="nf">assign_cluster</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">centroids</span><span class="p">):</span>
+    <span class="c1"># Pairwise squared L2 distances. Shape [n, k]
+</span>    <span class="n">distances</span> <span class="o">=</span> <span class="p">((</span><span class="n">data</span><span class="p">[:,</span> <span class="n">np</span><span class="p">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">-</span> <span class="n">centroids</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">).</span><span class="nb">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="c1"># find closest centroid index. Shape [n]
+</span>    <span class="n">clusters</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">clusters</span>
+
+<span class="k">def</span> <span class="nf">update_centroids</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">clusters</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="c1"># Mean positions of data within clusters
+</span>    <span class="n">centroids</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="p">.</span><span class="n">mean</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">clusters</span> <span class="o">==</span> <span class="n">i</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">(</span><span class="n">centroids</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>The final step is to glue everything together inside a class:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">KMeans</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">k</span>
+        
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">steps</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">centroids</span> <span class="o">=</span> <span class="n">pick_centroids</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+            <span class="n">clusters</span> <span class="o">=</span> <span class="n">assign_cluster</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">centroids</span><span class="p">)</span>
+            <span class="bp">self</span><span class="p">.</span><span class="n">centroids</span> <span class="o">=</span> <span class="n">update_centroids</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">clusters</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">k</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">assign_cluster</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">centroids</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Finally, we can instantiate an object, train it, and do the predictions.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">kmeans</span><span class="p">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="n">clusters</span> <span class="o">=</span> <span class="n">kmeans</span><span class="p">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>If you have Matplotlib installed (<code class="language-plaintext highlighter-rouge">pip install matplotlib</code>), you can visualize the data and the result.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="c1"># Plot data points with cluster id as color
+</span><span class="n">plt</span><span class="p">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="n">clusters</span><span class="p">)</span>
+<span class="c1"># Plot centroids
+</span><span class="n">plt</span><span class="p">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">kmeans</span><span class="p">.</span><span class="n">centroids</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">kmeans</span><span class="p">.</span><span class="n">centroids</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">c</span><span class="o">=</span><span class="s">"red"</span><span class="p">)</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div></div>
+<p>You should have something looking like this:</p>
+
+<figure>
+  <img src="/assets/img/matplotlib.png" alt="Matplotlib display" style="max-width:350px;display:inline-block;width:90%;" />
+  <figcaption>Fig. 3 — Matplotlib cluster visualization</figcaption>
+</figure>
+
+<p>Go ahead and run the code step by step to build a better grasp of Numpy.
+Read the <a href="https://numpy.org/doc/stable/user/basics.broadcasting.html">Numpy documentation about broadcasting operations</a>
+to understand how the pairwise distance is computed with a single line of code.</p>
+
+<p>I suggest you don’t use this code if it’s not for educational purposes. Scikit-learn <a class="citation" href="#scikit-learn">(Pedregosa et al., 2011)</a>
+is a very popular <a href="https://scikit-learn.org/stable/">open-source Python library</a>, built on top of Numpy,
+which implements <a href="https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html?highlight=k%20means#sklearn.cluster.KMeans">the naive k-means algorithm</a>,
+its variants, and many more machine learning algorithms.</p>
+
+<h2 id="limitations-and-variants">Limitations and Variants</h2>
+
+<p><strong>The strength of <em>K-means</em> is its conceptual simplicity</strong>. The logic —but also the implementation—
+is intuitive and straightforward. However, it is necessary to understand
+that the algorithm was built around restrictive hypotheses about the data
+distribution. Some tweaks and variants overcome some limitations.</p>
+
+<h3 id="sensitivity-to-initialization">Sensitivity to Initialization</h3>
+
+<p>The first drawback of k-means, which can easily be observed after a few runs, is the sensitivity
+of the algorithm to the initial locations of the centroids.
+<strong>Each possible initialization corresponds to a certain convergence speed and a final solution</strong>.
+Some solutions correspond to local minima and are far from optimal.</p>
+
+<p>A naive way to address this sensitivity to initialization is to run the algorithm several
+times and keep the best model. Another solution to get around it is to use expert knowledge
+to hand-craft what could be a good initialization. A third solution is to <strong>come up with
+some heuristics to define a good initialization state. These rules are called <em>seeding techniques</em></strong>.</p>
+
+<h4 class="no_toc">Seeding techniques</h4>
+
+<p>Many seeding heuristics have been developed over time.
+<em>K-means++</em> <a class="citation" href="#arthur2006k">(Arthur &amp; Vassilvitskii, 2006)</a> is one of the most popular
+and the default initialization method in Scikit-learn (and Matlab).
+The motivation behind it is that <strong>spreading out the initial centroids
+is beneficial</strong>. Indeed, picking up spread centroids increases the chances
+that they belong in different clusters.</p>
+
+<p>The <em>k-means++</em> seeding algorithm is as follows:</p>
+<ul>
+  <li>Randomly select the first set of centroids among the data points.</li>
+  <li>For all data points, compute the distance to the closest centroid \( D(\textbf{x}) \).</li>
+  <li>Pick up another centroid from the set of data points, given the weighted
+distribution proportional to the squared
+distances: \( p(\textbf{x}_i)= \frac{ D(\textbf{x}_i)^2 }{ \sum_{\textbf{x} \in X} D(\textbf{x})^2 } \)</li>
+  <li>Repeat the two previous steps \( k-1 \) times.</li>
+</ul>
+
+<p>The benefits in terms of convergence speed and final error outweigh the computational overhead
+for this initialization procedure; see the original paper <a class="citation" href="#arthur2006k">(Arthur &amp; Vassilvitskii, 2006)</a> for details.
+If you are looking for a thorough comparison of seeding techniques, I recommend this recent review
+<a class="citation" href="#franti2019much">(Fränti &amp; Sieranoja, 2019)</a>.</p>
+
+<p>Keep in mind that a good initialization of the centroids should be as close as possible to the
+optimal solution. <strong>Thus, finding a good initialization is not easier than solving the clustering problem itself.</strong></p>
+
+<h4 class="no_toc">Harmonic Means</h4>
+
+<p>The authors of <em>k-harmonic means</em> <a class="citation" href="#zhang1999k">(Zhang et al., 1999)</a> claim their approach
+is significantly less sensitive to initialization.
+This algorithm does not optimize the SSE, but a different performance metric,
+which relies on a soft assignment and takes the sum over all data points of the harmonic
+average of the squared distance to all centroids.
+\[ C_{best} = \underset{C}{\arg\min}  \sum_{\textbf{x} \in X} \frac{1}{ \sum_{i=1}^K \frac{1}{\lVert \textbf{x} - \textbf{c}_i \rVert^2} } \]</p>
+
+<p>Looking for the minimum of this expression with respect to centroids leads to a different update rule:</p>
+
+<p>\[
+\begin{aligned}
+ \forall 1\le i \le k, \,\, \textbf{c}^{t+1}_i &amp;= \sum_{\textbf{x} \in X}  \frac{\alpha_{i,\textbf{x}}^t \textbf{x}}{\alpha_{i,\textbf{x}}^t} \\<br />
+ \text{with}\;\, \alpha_{i,\textbf{x}}^t &amp;= \frac{1}{\vert\vert \textbf{x} - \textbf{c}_i^t \vert\vert^3 \left( \sum_{j=1}^K \frac{1}{\vert\vert \textbf{x} - \textbf{c}_j^t \vert \vert^2 } \right)^2 }
+\end{aligned}
+\]</p>
+
+<p>Check out the paper if you would like to implement <em>k-harmonic means</em>. They propose an efficient
+algorithm that reduces numerical instabilities.</p>
+
+<h3 id="computational-time-complexity">Computational Time Complexity</h3>
+
+<p>The assignment step time complexity is \( O(nkd) \)
+where \( n \) is the number of samples, \( k \) is the number of clusters,
+and  \( d \) is the input space dimension. <strong>This complexity is the consequence
+of computing the pair-wise distance between all data points and all centroids</strong>.
+The update step has a time complexity of \( O(nd) \). The mean is computed along \( d \) dimensions for
+\( k \) clusters, each containing an average of \( n/k \) data points.</p>
+
+<p>The overall <strong>time complexity at each step of the Lloyd algorithm is therefore \( O(nkd) \)</strong>.
+If all these values increase two-fold at once, then the algorithm will be eight times slower—not ideal.
+In addition, the number of necessary iterations to reach convergence grows
+sublinearly with \(k\), \(n\) and \(d\).</p>
+
+<h4 class="no_toc">Dimensionality Reduction</h4>
+<p>There are some ways to mitigate this scaling problem. The first one is to retain only the relevant dimensions
+with a feature selection. The second is to <strong>project the data points into a smaller space</strong> with
+<a href="https://en.wikipedia.org/wiki/Principal_component_analysis">principal components analysis (PCA)</a>,
+<a href="https://en.wikipedia.org/wiki/Independent_component_analysis">independent component analysis (ICA)</a>,
+or <a href="https://en.wikipedia.org/wiki/Linear_discriminant_analysis">linear discriminant analysis (LDA)</a>.</p>
+
+<h4 class="no_toc">Batch Processing</h4>
+<p>A second approach to reducing the computational complexity is to use fewer
+samples at each iteration. <strong>Rather than working
+with all data points, the algorithm only manipulates a randomly selected subset.
+This variant is called <em>mini-batch k-means</em></strong>.
+We usually want the batch size, noted \( b \), to be far greater than the number of clusters
+and much lower than the number of samples (\( k \ll b \ll n \)).</p>
+
+<h4 class="no_toc">Triangular Inequality</h4>
+<p>We know the shortest path between two points is to follow a straight line rather than to stop
+somewhere else in between. In mathematics this is known as the triangular inequality:
+\[ \forall \textbf{x}, \textbf{y}, \textbf{z} \in \mathbb{R}^d ,\;\, 
+\vert\vert \textbf{x} - \textbf{z} \vert\vert \leq \vert\vert \textbf{x} - \textbf{y} \vert\vert + \vert\vert \textbf{y} - \textbf{z} \vert\vert \]</p>
+
+<p>We can leverage this for our case:
+given a data point \( \textbf{x} \) and two centroids \( \textbf{c}_1 \)
+and \( \textbf{c}_2 \), if \( \vert\vert \textbf{x} - \textbf{c}_1 \vert\vert \leq \frac{1}{2} \vert\vert \textbf{c}_1 - \textbf{c}_2 \vert\vert \)
+then \( \vert\vert \textbf{x} - \textbf{c}_1\vert\vert \leq \vert\vert \textbf{x} - \textbf{c}_2 \vert\vert \),
+which means \( \textbf{x} \) belongs to the cluster represented by \(\textbf{c}_1\).
+Consequently, we do not not need to compute \( \vert\vert \textbf{x} - \textbf{c}_2 \vert\vert \).</p>
+
+<p>Over the course of the training, the <em>Elkan algorithm</em> <a class="citation" href="#elkan2003using">(Elkan, 2003)</a>
+keeps track of the upper bounds for the distances between all data points and 
+the centroids (noted \( u_{\textbf{x},\textbf{c}} \) ). Suppose
+\( u_{\textbf{x},\textbf{c}_1}  \geq \vert\vert \textbf{x} - \textbf{c}_1 \vert\vert \),
+then we can spare the computations of \( \vert\vert \textbf{x} - \textbf{c}_2 \vert\vert \)
+if \( u_{\textbf{x},\textbf{c}_1}  &gt; \vert\vert \textbf{c}_1 -  \textbf{c}_2 \vert\vert \).
+The upper bounds get updated at each iteration as the centroids keep on moving.</p>
+
+<h3 id="sensitivity-to-outliers">Sensitivity to Outliers</h3>
+
+<p>The centroid locations are defined as the mean positions of the data points within each cluster.
+However, <strong>the mean is an estimator sensitive to outliers</strong>. Outliers are data points that are 
+significantly different from the other ones (out of distribution samples).
+Fig.3 illustrates this issue, where two data points out of distribution have a disproportionate impact on
+the final result. <strong>Not only are some points not assigned to the right cluster, but the decision
+boundary is ultimately different</strong>.</p>
+
+<figure>
+  <img src="/assets/img/outliers_off.png" alt="k-means nwithout outliers" style="max-width:300px;display:inline-block;width:48%;" />
+  <img src="/assets/img/outliers_on.png" alt="kmeans with outliers" style="max-width:300px;display:inline-block;width:48%;" />
+  <figcaption>Fig. 4 — Without outliers (left) and with outliers (right).</figcaption>
+</figure>
+
+<p>If possible, a solution could be to <strong>preprocess the data by filtering out the outliers</strong>.
+A different remedy could be to <strong>weight each data point</strong>. During the update step,
+weighted-mean is therefore used. <em>Weighted k-means</em> can reduce the impact of the outliers
+and avoid the need for a hard decision in the preprocessing.
+Finding a good weighting strategy is not easy and might take a few trials.</p>
+
+<h4 class="no_toc">Different Aggregators</h4>
+<p>There are two more variants of <em>k-means</em> designed to reduce the influence of outliers.
+For the first one, <strong>the centroids are no longer defined as the mean locations but as the median positions.
+The algorithm is rightfully called <em>k-medians</em></strong>. <em>K-means</em> minimize the within cluster-variance (L2-norm)
+while <em>k-medians</em> minimize the absolute deviation (L1-norm). For k-medians, the update rule becomes:</p>
+
+<p>\[ \forall 1\le i \le k, \,\, c^{t+1}_i = \text{median}( S^t_i ) \]</p>
+
+<p>The second adaptation enforces some restrictions to centroids. Rather than taking any possible locations, 
+the <strong>centroids are restricted to the set of data points. This algorithm is called <em>k-medoids</em></strong>
+(or Partitioning Around Medoids). A medoid is the most central representant in a cluster
+which minimizes the sum of distances to other data points. This distance metric makes <em>k-medoids</em>
+more robust to outliers.
+For <em>k-medoids</em>, the optimal solution is given by:</p>
+
+<p>\[ C_{best} = \underset{X}{\arg\min}  \sum_{i=1}^{k} \sum_{\textbf{x} \in S_i} \lVert \textbf{x} - \textbf{c}_i \rVert \]</p>
+
+<p>Finding the right medoids requires a different algorithm (out of scope for
+this post) and has a higher computational complexity of \( O(k(n-k)^2) \) at each iteration step.
+See PAM, CLARA, and CLARANS algorithms <a class="citation" href="#schubert2019faster">(Schubert &amp; Rousseeuw, 2019)</a> if you are interested.</p>
+
+<h3 id="shape-and-extent-of-clusters">Shape and Extent of Clusters</h3>
+
+<h4 class="no_toc">Convexity of Partitions</h4>
+
+<p>K-means, and all its variants, minimize distortion and <strong>optimize the clusters for compactness.
+The implicit assumption is that clusters are roughly spherical</strong>
+(<a href="https://en.wikipedia.org/wiki/Isotropy">isotropic</a>, uniform in all directions).
+Depending on the distribution of data points, some clusters might not be exactly spherical, but they
+will <strong>at least form convex partitions</strong>. Convex means that for any two points in the same cluster,
+the whole segment from one point to the other is fully contained inside the Voronoi cell.</p>
+
+<p>Some good examples of failing cases are concentric circles, half-moons, and the smiley,
+as illustrated in the figure below. There is no way for <em>k-means</em> to isolate
+the inner ring from the external ring, as the outermost partition will not be convex.
+The same problem applies to the 4 components of the smiley. For the two half-moons, the geometrical
+properties of each cluster cannot be captured.</p>
+
+<figure>
+  <img src="/assets/img/rings.png" alt="Rings dataset" style="max-width:300px;display:inline-block;width:32.5%;" />
+  <img src="/assets/img/halfmoons.png" alt="Half moons datasets" style="max-width:300px;display:inline-block;width:32.5%;" />
+  <img src="/assets/img/smiley.png" alt="Smiley datasets" style="max-width:300px;display:inline-block;width:32.5%;" />
+  <figcaption>Fig. 5 — Partitions for non-convex and geometric clusters. Concentric&nbsp;rings&nbsp;(left, k=8), half&nbsp;moons&nbsp;(center,&nbsp;k=4) and smiley&nbsp;(right,&nbsp;k=12)&nbsp;datasets</figcaption>
+</figure>
+
+<p>One partial solution is to <strong>overestimate the number of clusters and merge the partitions later on</strong>.
+However, that might not be easy for high-dimensional data, and it will never really compensate if the data
+distribution violates the initial assumption of spherical/convex clusters.</p>
+
+<p>One might want to use the <a href="https://en.wikipedia.org/wiki/Kernel_method#Mathematics:_the_kernel_trick">kernel trick</a>
+to operate in a higher dimensional space. The hope is that in the projected space the data will comply with the spherical
+distribution hypothesis. Finding the right kernel function could be cumbersome.</p>
+
+<h4 class="no_toc">Similar Expansions</h4>
+<p>A further limitation is the relative size of clusters. By placing the decision boundaries halfway between 
+centroids, <strong>the underlying assumption is that clusters are evenly sized along that direction</strong>.
+The size is defined as the spatial extent (area, volume, or <a href="https://en.wikipedia.org/wiki/Lebesgue_measure">Lebesgue measure</a>)
+—not the number of data points assigned inside the cluster.</p>
+
+<p>Once again, some datasets with complex geometrical shapes
+might not match this assumption. The perfect example is the Mickey Mouse dataset.</p>
+
+<figure>
+  <img src="/assets/img/mickey.png" alt="mickey dataset" style="max-width:300px;display:inline-block;width:49%;" />
+  <img src="/assets/img/tshape.png" alt="T shape datasets" style="max-width:300px;display:inline-block;width:49%;" />
+  <figcaption>Fig. 6 — K-means partitions with anisotropic clusters and different&nbsp;variances.</figcaption>
+</figure>
+
+<p>Finally, the <em>k-means</em> could fail if data arises from blobs with similar sizes, but some generate far
+fewer observations. This is somewhat related to the initialization problem: selecting a centroid from
+the underrepresented class is less likely.</p>
+
+<p>To sum up, k-means clustering assumes the clusters have convex shapes (e.g. a circle, a sphere),
+all partitions should have similar sizes, and the clusters are balanced.</p>
+
+<h4 class="no_toc">Capturing Variances</h4>
+<p><em>K-means</em> and its variants only learn the central location of clusters—nothing more.
+<strong>It would be relevant to also capture the spatial extent of each cluster</strong>. The
+<strong><a href="https://en.wikipedia.org/wiki/Mixture_model">Gaussian Mixture Model</a></strong> (<em>GMM</em>)
+was designed to capture the mean location and standard deviation of the data.</p>
+
+<p><em>GMM</em> computes the probability for all data points to belong to a cluster, for all clusters. 
+This is called a <em>soft assignment</em>, in opposition to the hard assignment to one and
+only one cluster used by <em>k-means</em>. <em>GMM</em> is a powerful tool. There is a lot to say about it,
+but that will be a story for another time.</p>
+
+<h3 id="optimal-number-of-clusters">Optimal Number of Clusters</h3>
+
+<p>Last but not least, finding the optimal number of clusters is necessary to achieve good performance.
+Priors or domain knowledge can be very handy for this task.
+To this day, more than 30 methods have been published on this topic.
+I will try to cover the most common methods.</p>
+
+<h4 id="the-elbow-method">The Elbow Method</h4>
+
+<p>First of all, we need to define a metric which tells how compact the clusters are.
+A pertinent metric for this is the <strong>within-cluster sum squared error</strong> (\(SSE\) or \(WSS\)).
+It is defined as the sum of squared distance between each point and its closest centroid.</p>
+
+<p>\[ SSE(k) = \sum_{i=1}^{k} \sum_{\textbf{x} \in S_i} \vert\vert \textbf{x} - \textbf{c}_i \vert\vert^2 \]</p>
+
+<p>This function is strictly decreasing when applied on converged models. At first,
+when we add clusters it gets easier to model the data. But after a certain point,
+increasing the number of clusters brings little additional benefits,
+as it only splits clusters into sub-groups or starts modelling the noise.
+<strong>The <em>Elbow method</em> <a class="citation" href="#thorndike1953belongs">(Thorndike, 1953)</a> is a heuristic to
+find this point of diminishing return</strong>.
+The analysis is performed by plotting the evolution of the explained variance as the number 
+of clusters grows. <strong>The optimal number of clusters is located at the bend,
+the elbow of the curve.</strong></p>
+
+<figure>
+  <img src="/assets/img/elbow.png" alt="Explained variance" style="max-width:680px;display:inline-block;width:103%;" />
+  <figcaption>Fig.7 — Explained variance</figcaption>
+</figure>
+
+<p>\( SSE \) is often applied once the model has converged.
+However, it can also be used as a stopping criteria for the algorithm.
+If \( SSE \) is computed at the end of each iteration, a heuristic
+could be to stop the training when the \( SSE \) decreases less than a
+certain threshold compared to the previous step.</p>
+
+<h4 id="gap-statistic">Gap Statistic</h4>
+
+<p>The <em>Elbow Method</em> is far from ideal. The elbow is not formally defined,
+and a visual inspection is necessary to localise it.
+Consequently, the estimation of the optimal number of clusters can be subjective.
+Not all SSE curves will have a sharp elbow like in the example above!</p>
+
+<p>The <em>gap statistic analysis</em> <a class="citation" href="#tibshirani2001estimating">(Tibshirani et al., 2001)</a> addresses this problem.
+The idea behind it is to <strong>compare the SSE measured on the data with the SSE computed on a dataset
+without obvious clustering</strong> (data with a null reference distribution). The SSE on the data should be 
+further away from the reference value for the optimal number of clusters.</p>
+
+<p>The equation looks like this :</p>
+
+<p>\[ G(k) =  \log SSE(X^*, k) - \log SSE(X, k) \]</p>
+
+<p>We denote by \( X^* \) a dataset with data points <strong>uniformly distributed</strong>
+in the interval defined by the minimum and maximum values of \( X\) along each \( d \) component.</p>
+
+<p>The expected SSE on the null distribution, the first term of the equation,
+is <strong>estimated with bootstrapping</strong>. This means we sample \( B \) different datasets
+\(X_b^* \; \forall 1 \leq b \leq B\) and compute the mean logarithm of SSE.
+The estimation gets more accurate with higher values of B.
+However, keep in mind that \( G_B(k) \) is only computed once <em>k-means</em> has converged \( B+1 \) times.
+The expression of the gap function becomes:</p>
+
+<p>\[ G_B(k) = \frac{1}{B} \sum_{b=1}^{B} \log SSE(X_b^*, k) - \log SSE(X, k) \]</p>
+
+<p>The optimal number of clusters is the smallest k such that \( G(k) \geq G(k+1) - s_{k+1} \) where
+\( s_k = \sqrt{1 + 1/B}\;\text{std}_B(\log SSE(X_b^*, k)) \) accounts for the simulation error.</p>
+
+<p>Our toy example is simple enough so identifying the k which meets this condition is straightforward (k=4).</p>
+<figure>
+  <img src="/assets/img/gap.png" alt="kmeans gap statistic analysis" style="max-width:660px;display:inline-block;width:100%;" />
+  <img src="/assets/img/gap-cond.png" alt="kmeans gap condition" style="max-width:680px;display:inline-block;width:103%;" />
+  <figcaption>Fig.8 — Gap statistic analysis</figcaption>
+</figure>
+
+<h4 id="silhouette-analysis">Silhouette Analysis</h4>
+
+<p>Silhouette coefficient <a class="citation" href="#rousseeuw1987silhouettes">(Rousseeuw, 1987)</a> is a
+<strong>quality measurement for partitioning</strong>. The silhouette score measures how close
+a data point is to its counterparts in the same cluster compared to other elements
+in other clusters. <strong>The score captures the cohesion (within-cluster distances)
+and the separation (inter-cluster distances)</strong>.</p>
+
+<p>The average dissimilarity of a data point \( \textbf{x} \) with elements in a cluster is defined as:</p>
+
+<p>\[ d(\textbf{x}, S_i) = \frac{1}{n_i - 1} \sum_{\textbf{x}_i \in S_i} \vert\vert \textbf{x}_i - \textbf{x} \vert\vert \]</p>
+
+<p>The cohesion score (the lower, the better) of \( \textbf{x} \), which belongs to
+partition \( S_{\textbf{x}} \), is the intra-cluster
+distance: \( a(\textbf{x}) = d(\textbf{x}, S_{\textbf{x}}) \).
+The partition that does not contain \( \textbf{x} \) and minimize \( d(\textbf{x}, S_i) \)
+is called the <strong>neighboring cluster</strong>. The separation score (the higher, the better) is
+defined as the average dissimilarity of \( \textbf{x} \) with the neighbouring
+cluster: \( b(\textbf{x}) = \min_{i, \textbf{x}\notin S_i} d(\textbf{x}, S_i) \).
+The silhouette coefficient combines these two scores:</p>
+
+<p>\[ s(\textbf{x}) = \frac{b(\textbf{x}) - a(\textbf{x})}{\max\{a(\textbf{x}), b(\textbf{x})\}} \]</p>
+
+<p>If the cluster only contains 1 data point, the silhouette score is set to 0.
+The score varies from -1 to 1. A score close to 1 represents data points well assigned to clusters.
+If the score is positive, the data point is on average closer to elements
+in the cluster it belongs to rather than elements in the neighbouring cluster.
+On the contrary, if it is negative, the data point should belong to the neighbouring cluster.</p>
+
+<p><strong>The mean silhouette score over all data points is a measure of the partitioning quality</strong>.
+This quality score can be computed for several values of \(k\).
+<strong>The best number of clusters yields the highest average silhouette coefficient</strong>.</p>
+
+<p>It is possible to gain much more insight about the quality of partitioning
+by plotting the sorted silhouette coefficients per cluster for different numbers of clusters.
+The silhouette analysis looks like this:</p>
+
+<figure>
+  <img src="/assets/img/silhouette234.png" alt="Silhouette k=2,3,4" style="max-width:680px;display:inline-block;width:103%;" />
+  <img src="/assets/img/silhouette567.png" alt="Silhouette k=5,6,7" style="max-width:680px;display:inline-block;width:103%;" />
+  <figcaption>Fig.9 — Silhouette diagram analysis</figcaption>
+</figure>
+
+<p>For the <strong>optimal number of clusters, the silhouette plots should</strong>:</p>
+<ul>
+  <li><strong>have the same thickness</strong> (same number of observations)</li>
+  <li><strong>have the same profile</strong></li>
+  <li><strong>intersect with the average silhouette score</strong></li>
+</ul>
+
+<p>In Fig.8, we can rule out \(k=3,5,6,7\). The graphical analysis is ambivalent between \(k=2\)
+and \(k=4\). However, the latter has a higher average value. The conclusion of the analysis
+is that best results are obtained with \(k=4\).</p>
+
+<p>The Elbow method has a linear time complexity of \(O(nd)\). The silhouette computes all pairwise distances,
+so time complexity jumps to \(O(n^2d)\). It’s not cheap, and in fact it’s worse than the Lloyd algorithm
+itself on most datasets.</p>
+
+<!---
+<script type="text/javascript" src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<div id="silhouette" style="width:400px;height:500px;"></div>
+<script>
+let n_i = centroids.map((c, idx) => data.filter(d => d.cluster == idx).length)
+for (let i=0; i<data.length; i++) {
+  data[i].d = centroids.map(c => 0);
+  for (let j=0; j<data.length; j++) {
+     data[i].d[data[j].cluster] += l2dist(data[i], data[j]) / (n_i[data[j].cluster] - 1);
+  }
+  const a = data[i].d[data[i].cluster];
+  data[i].d.splice(data[i].cluster, 1);
+  const b = Math.min(...data[i].d);
+  data[i].s = (b - a) / Math.max(b, a);
+}
+
+const cumulativeSum = (sum => value => sum += value)(0);
+let n_i_cum = n_i.map(cumulativeSum);
+n_i_cum.unshift(0);
+
+const average = arr => arr.reduce((sume, el) => sume + el, 0) / arr.length;
+let avg_sil = average(data.map(d => d.s))
+
+let traces = centroids
+  .map((c, idx) => data.filter(d => d.cluster==idx).map(d => d.s))
+  .map((sil, idx) => {return {
+    y: d3.range(n_i_cum[idx] + 10*idx, n_i_cum[idx] + 10*idx + sil.length),
+    x: sil.sort(),
+    mode: 'line',
+    fill: 'tozerox',
+    xaxis: 'x',
+    yaxis: 'y',
+  }})
+traces.push({y: [0, n_i_cum[k] + 10*k], x: [avg_sil, avg_sil], mode: 'lines', line: {color: "grey"}});
+let layout = {
+  showlegend: false,
+  annotations: [{
+    x: avg_sil,
+    y: n_i_cum[k] + 10*k,
+    xref: 'x',
+    yref: 'y',
+    text: 'Avg silhouette value',
+    font: {family: 'Times New Roman', size: 16},
+    showarrow: true,
+    arrowhead: 7,
+    ax: 0,
+    ay: -10,
+  }],
+  title: {
+    text:'Silhouette Histograms',
+    font: {family: 'Times New Roman', size: 16},
+  },
+  xaxis: {
+    title: {
+      text: 'Silhouette value (k=' + k + ')',
+      font: {family: 'Times New Roman', size: 16},
+      standoff: 0,
+    },
+    range: [-0.1, 0.81]
+  },
+  yaxis: {
+    title: {
+      text: 'Histogram per clusters',
+      font: {family: 'Times New Roman', size: 16},
+      standoff: -100,
+    },
+    ticks: '',
+    showticklabels: false,
+    showgrid: false,
+  },
+};
+Plotly.newPlot("silhouette", traces, layout);
+
+
+function sse(data, centroids) {
+ return data.map(d => (d.x - centroids[d.cluster].x)**2 + (d.y - centroids[d.cluster].y)**2).reduce((a, b) => a+b)
+}
+
+</script>
+-->
+
+<h4 id="measures-of-information">Measures of Information</h4>
+
+<p><strong>A good estimator of the model performance should take into account the quality of the model
+but should also penalise for the complexity of the model. Bayesian Information Criterion</strong> (<em>BIC</em>)
+<a class="citation" href="#schwarz1978estimating">(Schwarz &amp; others, 1978)</a> and <strong>Akaike Information Criterion</strong> (<em>AIC</em>)
+<a class="citation" href="#akaike1974new">(Akaike, 1974)</a> measure the statistical quality of a model and respect this
+parsimony principle (more parameters should not be added without necessity). For both
+metrics, the lower the better.</p>
+
+<p>For k-means, the simplest expressions for \( BIC \) and \( AIC \) are defined as:
+\begin{aligned}
+ BIC &amp;= \frac{SSE}{\hat\sigma^2} + kd\log(n) \\ 
+ AIC &amp;= \frac{SSE}{\hat\sigma^2} + 2kd 
+\end{aligned}</p>
+
+<p>\( \hat\sigma^2 \) is the average intra-cluster variance defined on a model
+with a very high number of clusters <a class="citation" href="#friedman2001elements">(Friedman et al., 2001, sec. 7.7)</a>:
+\( \hat\sigma^2 = \frac{SSE(k’)}{k’},\; k’&gt;k \). It is worth computing \( \hat\sigma^2 \)
+for several values of \( k’ \). Small \( k’ \) penalizes models with high number of clusters
+more heavily</p>
+
+<figure>
+  <img src="/assets/img/bic-aic.png" alt="kmeans BIC and AIC measure" style="max-width:680px;display:inline-block;width:103%;" />
+  <figcaption>Fig.10 — BIC and AIC</figcaption>
+</figure>
+
+<p>From the above figure, we can see that curves for \(k’=16\) and \(k’=20\)
+are overlapping, for both \( BIC \) and \(AIC\) since
+the average intra-cluster variances are nearly equal. In both cases, and for both
+metrics, the optimal number of clusters is 4.</p>
+
+<p>The story and the conclusion is a bit different for \( k’=12 \).
+The minimum for \( BIC \) is reached for \( k = 2 \) but the minimum 
+for \( AIC \) is obtained with \( k = 4 \). <strong>This illustrates that small
+\(k’\) leads to models with fewer clusters. It also shows that BIC
+yields a higher penalty than \(AIC\)</strong>.</p>
+
+<details>
+  <summary style="background:#eee">This is not the whole story. Click to expand if you like equations!</summary>
+  <div style="background:#eee;padding:5px">
+
+<p>
+\(BIC\) and \(AIC\) are originally defined as: 
+<br />
+\( BIC = p\log(n) - 2 \log\left(L (M; X) \right) \) and \( AIC = 2p - 2 \log\left(L (M; X) \right) \)
+<br />where \( M \) is the model, \( p \) is the number of free-parameters of \( M \),
+and \( L (M; X) \) is the model likelihood.
+</p>
+
+<p>
+With k-means, we can heavily rely on the assumption that data arises
+from identical isotropic blobs. Observed data points can be decomposed
+as \( \textbf{x} = \mu + e, \; \forall \textbf{x} \in X \) where the \( \mu \)
+is one of the centroids, \(\mu \in C \);
+and the error follows a multivariate Gaussians, \( e \sim \mathcal{N}(0,\,\sigma^{2}I_d)\).
+</p>
+
+<p>
+Given a partition of the space, the probability to observe a data point \( \textbf{x} \) is therefore defined by:
+
+\[ P(\textbf{x} \vert S) = \frac{n_i}{n} 
+\frac{1}{\sqrt{2 \pi \sigma^2}^{d}} \exp \left( -\frac{\vert \vert \textbf{x} - \textbf{c}_i \vert \vert_2^2}{2\sigma^2} \right) \]
+</p>
+
+
+<p>
+This can be injected into the log-likelihood:
+
+\[ \begin{aligned}
+\log &amp; L(S; X)  = \log \prod_{\textbf{x} \in X} P(\textbf{x} \vert S) = \sum_{i=1}^{k} \sum_{\textbf{x} \in S_i} \log P(\textbf{x} \vert S)
+               \\ &amp;= \sum_{i=1}^{k} \left[ n_i \log\left(\frac{n_i}{n}\right) -  \frac{\sum_{\textbf{x} \in S_i} \vert \vert \textbf{x} - \textbf{c}_i \vert \vert_2^2}{2\sigma^2}\right] - \frac{nd}{2}\log(2\pi\sigma^2)
+\end{aligned} \]
+
+If we consider that all <b>clusters are evenly balanced</b>, and if we assume <b>\( \sigma^2 \)
+to be fixed</b>, then \( BIC \) and \(AIC\) are equal to the previous equation
+with an additive constant. Even if \( \sigma^2 \) is considered fixed, it is unknown. Its value is estimated in
+a low-bias regime.
+</p>
+
+<p>
+Now, <b>let's assume \( \sigma^2 \) can be estimated from the data.</b>
+The unbiased estimator of the variance for each cluster gives:
+
+\[ \forall 1\le i \le k, \; \hat\sigma_i^2 = \frac{1}{d(n_i - 1)} \sum_{\textbf{x} \in S_i} \vert\vert \textbf{x} - \textbf{c}_i \vert\vert^2 \]
+
+Combined with the definition of SSE, we end up with:
+
+\[ SSE = \sum_{i=1}^{k} \sum_{\textbf{x} \in S_i} \vert\vert \textbf{x} - \textbf{c}_i \vert\vert^2 = \sum_{i=1}^k d(n_i - 1) \hat \sigma_i^2 \]
+</p>
+
+<p>
+With the underlying assumption that all clusters have the same extent, we have \( \hat\sigma^2 = \hat \sigma_i^2 \).
+In conclusion, the unbiased estimation of the variance is: 
+
+\[ \hat\sigma^2 = \frac{1}{d(n-k)}  \sum_{i=1}^{k} \sum_{\textbf{x} \in S_i} \vert\vert \textbf{x} - \textbf{c}_i \vert\vert^2 = \frac{SSE}{d(n-k)} \]
+</p>
+
+Going back to the log-likelihood formula, it can be simplified into:
+
+\[ \begin{aligned}
+\log &amp;  L(S; X) =  \sum_{i=1}^{k} \left[ n_i \log\left(\frac{n_i}{n}\right) \right] - \frac{d(n-k)}{2} - \frac{nd}{2}\log(2\pi\sigma^2)
+\end{aligned} \]
+
+In the end, knowing that there are \( p=k\times d \) free parameters for k-means, the \( BIC \) and \( AIC \) expressions become:
+
+\[ \begin{aligned}
+ BIC &amp; =(2n + dk)\log(n) + d(n-k) + nd\log(2\pi\sigma^2) - 2 \sum_{i=1}^{k} n_i \log\left(n_i\right)
+\\ AIC &amp; = 2n\log(n) + d(n+k) + nd\log(2\pi\sigma^2) - 2 \sum_{i=1}^{k} n_i \log\left(n_i\right)
+\\ \text{with}&amp;\; \sigma^2 = \frac{SSE}{d(n-k)}
+\end{aligned} \]
+
+There is still one limitation with these equations: they consider
+the assignment as the true label for classification rather than 
+taking into account the uncertainty in this assignment.
+I recommend this article <a class="citation" href="#hofmeyr2020degrees">(Hofmeyr, 2020)</a> which
+shows that the number of free parameters is underestimated.
+
+</div></details>
+
+<!--#### Clustergram?-->
+<!--<a class="citation" href="#schonlau2002clustergram">(Schonlau, 2002)</a>-->
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p><em>K-means’</em> high notoriety is certainly due to its simplicity and ease of implementation.
+However, it has quite a few limitations: the dependence on the initial centroids,
+the sensitivity to outliers, the spherical/convex clusters, and the troubles of clustering
+groups of different density and spatial extent.</p>
+
+<p>It is also necessary to standardize the data to have zero mean and unit standard deviation.
+Otherwise, the algorithm might struggle or give too much importance to certain features.</p>
+
+<h2 id="interview-questions">Interview Questions</h2>
+
+<p>Try to answer the following questions to assess your understanding of <em>k-means</em> and its variants.
+These questions are often asked during interviews for data science positions.</p>
+
+<ul>
+  <li>What is clustering?</li>
+  <li>Is clustering a supervised or an unsupervised technique?</li>
+  <li>Can you describe the K-means algorithm?</li>
+  <li>What is its complexity? How would you reduce the number of computations?</li>
+  <li>What are some termination criteria?</li>
+  <li>What is the difference between hard and soft assignments?</li>
+  <li>What are some weaknesses of k-means?</li>
+  <li>The algorithm has some assumptions about the data distribution. What are they?</li>
+  <li>How do you find the optimal number of clusters?</li>
+  <li>How come two different executions of the algorithm produce different results? How does one address this problem?</li>
+  <li>What kind of preprocessing would you apply to the data before running the algorithm?</li>
+  <li>Is the algorithm sensitive to outliers? If yes, how could you mitigate the problem?</li>
+  <li>What are the applications of k-means clustering?</li>
+</ul>
+
+  </div>
+
+  
+  <details id="references" style="padding-bottom:1em">
+    <summary style="background:#eee">References</summary>
+    <ol class="bibliography"><li><span id="lloyd1982least">Lloyd, S. (1982). Least squares quantization in PCM. <i>IEEE Transactions on Information Theory</i>, <i>28</i>(2), 129–137.</span></li>
+<li><span id="harris2020array">Harris, C. R., Millman, K. J., van der Walt, S. J., Gommers, R., Virtanen, P., Cournapeau, D., Wieser, E., Taylor, J., Berg, S., Smith, N. J., &amp; others. (2020). Array programming with NumPy. <i>Nature</i>, <i>585</i>(7825), 357–362.</span></li>
+<li><span id="scikit-learn">Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot, M., &amp; Duchesnay, E. (2011). Scikit-learn: Machine Learning in Python. <i>Journal of Machine Learning Research</i>, <i>12</i>, 2825–2830.</span></li>
+<li><span id="arthur2006k">Arthur, D., &amp; Vassilvitskii, S. (2006). <i>k-means++: The advantages of careful seeding</i>. Stanford.</span></li>
+<li><span id="franti2019much">Fränti, P., &amp; Sieranoja, S. (2019). How much can k-means be improved by using better initialization and repeats? <i>Pattern Recognition</i>, <i>93</i>, 95–112.</span></li>
+<li><span id="zhang1999k">Zhang, B., Hsu, M., &amp; Dayal, U. (1999). K-harmonic means-a data clustering algorithm. <i>Hewlett-Packard Labs Technical Report HPL-1999-124</i>, <i>55</i>.</span></li>
+<li><span id="elkan2003using">Elkan, C. (2003). Using the triangle inequality to accelerate k-means. <i>Proceedings of the 20th International Conference on Machine Learning (ICML-03)</i>, 147–153.</span></li>
+<li><span id="schubert2019faster">Schubert, E., &amp; Rousseeuw, P. J. (2019). Faster k-medoids clustering: improving the PAM, CLARA, and CLARANS algorithms. <i>International Conference on Similarity Search and Applications</i>, 171–187.</span></li>
+<li><span id="thorndike1953belongs">Thorndike, R. L. (1953). Who belongs in the family? <i>Psychometrika</i>, <i>18</i>(4), 267–276.</span></li>
+<li><span id="tibshirani2001estimating">Tibshirani, R., Walther, G., &amp; Hastie, T. (2001). Estimating the number of clusters in a data set via the gap statistic. <i>Journal of the Royal Statistical Society: Series B (Statistical Methodology)</i>, <i>63</i>(2), 411–423.</span></li>
+<li><span id="rousseeuw1987silhouettes">Rousseeuw, P. J. (1987). Silhouettes: a graphical aid to the interpretation and validation of cluster analysis. <i>Journal of Computational and Applied Mathematics</i>, <i>20</i>, 53–65.</span></li>
+<li><span id="schwarz1978estimating">Schwarz, G., &amp; others. (1978). Estimating the dimension of a model. <i>The Annals of Statistics</i>, <i>6</i>(2), 461–464.</span></li>
+<li><span id="akaike1974new">Akaike, H. (1974). A new look at the statistical model identification. <i>IEEE Transactions on Automatic Control</i>, <i>19</i>(6), 716–723.</span></li>
+<li><span id="friedman2001elements">Friedman, J., Hastie, T., &amp; Tibshirani, R. (2001). <i>The elements of statistical learning</i> (Vol. 1, Number 10). Springer series in statistics New York.</span></li>
+<li><span id="hofmeyr2020degrees">Hofmeyr, D. P. (2020). <i>Degrees of Freedom and Model Selection for k-means Clustering</i>.</span></li>
+<li><span id="schonlau2002clustergram">Schonlau, M. (2002). The clustergram: A graph for visualizing hierarchical and nonhierarchical cluster analyses. <i>The Stata Journal</i>, <i>2</i>(4), 391–402.</span></li></ol>
+    <script>
+     document.querySelectorAll(".citation").forEach(
+       e => e.onclick = function () {
+         document.querySelectorAll("#references")[0].setAttribute("open", "");
+       }
+     );
+    </script>
+  </details>
+  
+</div>
+
+<!-- POST NAVIGATION -->
+<div class="postNav clearfix">
+   
+    <a class="prev" href="/blog/conv1d/"><span>&laquo;&nbsp;Convolution Interactive Sandbox</span>
+    
+  </a>
+    
+    
+    <a class="next" href="/blog/knn-variance/"><span>K-Nearest Neighbors (KNN) - Visualizing the Variance&nbsp;&raquo;</span>
+     
+    </a>
+   
+</div>
+
+      </div>
+   </div><!-- end .content -->
+
+   <div class="footer">
+   <div class="container">
+      <p class="copy">&copy; 2022 <a href="https://antoinebrl.github.io">Antoine Broyelle.</a>
+        Powered by <a href="https://pages.github.com/">GitHub Pages</a> & <a href="http://jekyllrb.com">Jekyll</a>.
+        Design inspired by <a href="https://github.com/brianmaierjr/long-haul">long-haul</a>.
+      </p>
+
+      <div class="footer-links">
+         <ul class="noList">
+            
+            
+            <li><a href="https://twitter.com/antbrl">
+                  <svg id="twitter" class="custom-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100" style="height: 30px; width: 30px;"><circle class="outer-shape" cx="50" cy="50" r="48" style="opacity: 1;"></circle>
+                  <path class="inner-shape" style="opacity: 1;" transform="translate(25,25) scale(0.5)" d="M99.001,19.428c-3.606,1.608-7.48,2.695-11.547,3.184c4.15-2.503,7.338-6.466,8.841-11.189 c-3.885,2.318-8.187,4-12.768,4.908c-3.667-3.931-8.893-6.387-14.676-6.387c-11.104,0-20.107,9.054-20.107,20.223 c0,1.585,0.177,3.128,0.52,4.609c-16.71-0.845-31.525-8.895-41.442-21.131C6.092,16.633,5.1,20.107,5.1,23.813 c0,7.017,3.55,13.208,8.945,16.834c-3.296-0.104-6.397-1.014-9.106-2.529c-0.002,0.085-0.002,0.17-0.002,0.255 c0,9.799,6.931,17.972,16.129,19.831c-1.688,0.463-3.463,0.71-5.297,0.71c-1.296,0-2.555-0.127-3.783-0.363 c2.559,8.034,9.984,13.882,18.782,14.045c-6.881,5.424-15.551,8.657-24.971,8.657c-1.623,0-3.223-0.096-4.796-0.282 c8.898,5.738,19.467,9.087,30.82,9.087c36.982,0,57.206-30.817,57.206-57.543c0-0.877-0.02-1.748-0.059-2.617 C92.896,27.045,96.305,23.482,99.001,19.428z"></path>
+                  </svg>
+            </a></li>
+            
+            
+            <li><a href="https://github.com/antoinebrl">
+                  <svg id="github" class="custom-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100" style="height: 30px; width: 30px;"><circle class="outer-shape" cx="50" cy="50" r="48" style="opacity: 1;"></circle>
+                  <path class="inner-shape" style="opacity: 1;" transform="translate(25,25) scale(0.5)" d="M50,1C22.938,1,1,22.938,1,50s21.938,49,49,49s49-21.938,49-49S77.062,1,50,1z M79.099,79.099 c-3.782,3.782-8.184,6.75-13.083,8.823c-1.245,0.526-2.509,0.989-3.79,1.387v-7.344c0-3.86-1.324-6.699-3.972-8.517 c1.659-0.16,3.182-0.383,4.57-0.67c1.388-0.287,2.855-0.702,4.402-1.245c1.547-0.543,2.935-1.189,4.163-1.938 c1.228-0.75,2.409-1.723,3.541-2.919s2.082-2.552,2.847-4.067s1.372-3.334,1.818-5.455c0.446-2.121,0.67-4.458,0.67-7.01 c0-4.945-1.611-9.155-4.833-12.633c1.467-3.828,1.308-7.991-0.478-12.489l-1.197-0.143c-0.829-0.096-2.321,0.255-4.474,1.053 c-2.153,0.798-4.57,2.105-7.249,3.924c-3.797-1.053-7.736-1.579-11.82-1.579c-4.115,0-8.039,0.526-11.772,1.579 c-1.69-1.149-3.294-2.097-4.809-2.847c-1.515-0.75-2.727-1.26-3.637-1.532c-0.909-0.271-1.754-0.439-2.536-0.503 c-0.782-0.064-1.284-0.079-1.507-0.048c-0.223,0.031-0.383,0.064-0.478,0.096c-1.787,4.53-1.946,8.694-0.478,12.489 c-3.222,3.477-4.833,7.688-4.833,12.633c0,2.552,0.223,4.889,0.67,7.01c0.447,2.121,1.053,3.94,1.818,5.455 c0.765,1.515,1.715,2.871,2.847,4.067s2.313,2.169,3.541,2.919c1.228,0.751,2.616,1.396,4.163,1.938 c1.547,0.543,3.014,0.957,4.402,1.245c1.388,0.287,2.911,0.511,4.57,0.67c-2.616,1.787-3.924,4.626-3.924,8.517v7.487 c-1.445-0.43-2.869-0.938-4.268-1.53c-4.899-2.073-9.301-5.041-13.083-8.823c-3.782-3.782-6.75-8.184-8.823-13.083 C9.934,60.948,8.847,55.56,8.847,50s1.087-10.948,3.231-16.016c2.073-4.899,5.041-9.301,8.823-13.083s8.184-6.75,13.083-8.823 C39.052,9.934,44.44,8.847,50,8.847s10.948,1.087,16.016,3.231c4.9,2.073,9.301,5.041,13.083,8.823 c3.782,3.782,6.75,8.184,8.823,13.083c2.143,5.069,3.23,10.457,3.23,16.016s-1.087,10.948-3.231,16.016 C85.848,70.915,82.88,75.317,79.099,79.099L79.099,79.099z"></path>
+                  </svg>
+            </a></li>
+            
+            
+         </ul>
+      </div>
+   </div>
+</div><!-- end .footer -->
+
+   <script src="/assets/js/dropcap.min.js"></script>
+<script src="/assets/js/responsive-nav.min.js"></script>
+<script src="/assets/js/scripts.js"></script>
+
+
+</body>
+
+</html>

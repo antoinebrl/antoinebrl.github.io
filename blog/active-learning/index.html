@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7"><![endif]-->
+<!--[if IE 7]><html class="no-js lt-ie9 lt-ie8" <![endif]-->
+<!--[if IE 8]><html class="no-js lt-ie9" <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <title>Why isn't Active&nbsp;Learning Widely Adopted?</title>
+
+    <!-- Open Graph Meta -->
+    <meta content="Antoine Broyelle" property="og:site_name">
+    
+      <meta content="Why isn't Active&nbsp;Learning Widely Adopted?" property="og:title">
+    
+    
+      <meta content="article" property="og:type">
+    
+    
+      <meta content="Recently, I spent quite some time learning and playing with active learning (AL). The claim of active learning is quite appealing: a model can achieve the same performances—or even superior performance— with fewer annotated samples if it can select which specific instances need to be labeled. Sounds promising, right? In this article, I reflect on the promises of active learning to show that the picture is not all bright. Active learning has a few drawbacks; however, it represents a viable solution when building datasets at scale or when tackling the wide diversity of edge cases." property="og:description">
+    
+    
+      <meta content="https://antoinebrl.github.io//blog/active-learning/" property="og:url">
+    
+    
+      <meta content="2021-09-26T10:12:00+00:00" property="article:published_time">
+      <meta content="https://antoinebrl.github.io//about/" property="article:author">
+    
+    
+      <meta content="https://antoinebrl.github.io//assets/img/lights.jpg" property="og:image">
+    
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@antbrl">
+    <meta name="twitter:creator" content="@antbrl">
+    
+      <meta name="twitter:title" content="Why isn't Active&nbsp;Learning Widely Adopted?">
+    
+    
+      <meta name="twitter:url" content="https://antoinebrl.github.io//blog/active-learning/">
+    
+    
+      <meta name="twitter:description" content="Recently, I spent quite some time learning and playing with active learning (AL). The claim of active learning is quite appealing: a model can achieve the same performances—or even superior performance— with fewer annotated samples if it can select which specific instances need to be labeled. Sounds promising, right? In this article, I reflect on the promises of active learning to show that the picture is not all bright. Active learning has a few drawbacks; however, it represents a viable solution when building datasets at scale or when tackling the wide diversity of edge cases.">
+    
+    
+      <meta name="twitter:image:src" content="https://antoinebrl.github.io//assets/img/lights.jpg">
+    
+
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon/favicon.ico" />
+
+    <!-- Come and get me RSS readers -->
+    <link rel="alternate" type="application/rss+xml" title="Antoine Broyelle" href="https://antoinebrl.github.io//feed.xml" />
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!--[if IE 8]><link rel="stylesheet" href="/assets/css/ie.css"><![endif]-->
+    <link rel="canonical" href="https://antoinebrl.github.io//blog/active-learning/">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,800&display=swap" rel="preload">
+    <link href="https://fonts.googleapis.com/css?family=PT+Serif:400,700,400italic,700italic&display=swap" rel="preload">
+    <link href="https://fonts.googleapis.com/css?family=Crimson+Text&display=swap" rel="preload">
+
+    <!-- Modernizr -->
+<!--    <script src="/assets/js/modernizr.custom.15390.js" type="text/javascript"></script>-->
+
+    
+</head>
+
+
+<body>
+
+    <div class="header">
+     <div class="container">
+         <h1 class="logo"><a href="/">Antoine Broyelle</a></h1>
+         <nav class="nav-collapse">
+             <ul class="noList">
+                 
+                 <li class="element first  last">
+                     <a href="/index.html">Home</a>
+                 </li>
+                 
+             </ul>
+         </nav>
+     </div>
+ </div><!-- end .header -->
+
+
+   <div class="content">
+      <div class="container">
+         <div class="post">
+  
+  <h1 class="postTitle">Why isn't Active&nbsp;Learning Widely Adopted?</h1>
+  <p class="meta">September 26, 2021</p>
+
+  
+  <p>Recently, I spent quite some time learning and playing with active learning (AL). The claim of active learning is quite appealing: a model can achieve the same performances—or even superior performance— with fewer annotated samples if it can select which specific instances need to be labeled. Sounds promising, right? In this article, I reflect on the promises of active learning to show that the picture is not all bright. Active learning has a few drawbacks; however, it represents a viable solution when building datasets at scale or when tackling the wide diversity of edge cases.</p>
+  <div id="table-of-contents">
+    <ul id="toc" class="section-nav">
+<li class="toc-entry toc-h2"><a href="#the-promises-of-active-learning">The Promises of active learning</a></li>
+<li class="toc-entry toc-h2"><a href="#whats-wrong-with-active-learning">What’s wrong with active learning?</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#static-dataset-is-the-rule">Static dataset is the rule</a></li>
+<li class="toc-entry toc-h3"><a href="#training-is-easy-evaluation-is-hard">Training is easy, evaluation is hard</a></li>
+<li class="toc-entry toc-h3"><a href="#there-is-no-such-thing-as-a-free-lunch">There is no such thing as a free lunch</a></li>
+<li class="toc-entry toc-h3"><a href="#the-rise-of-other-training-techniques">The rise of other training techniques</a></li>
+<li class="toc-entry toc-h3"><a href="#the-low-return-on-investment">The low return on investment</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#when-to-use-active-learning">When to use active learning</a></li>
+<li class="toc-entry toc-h2"><a href="#conclusion">Conclusion</a></li>
+<li class="toc-entry toc-h2"><a href="#related-readings">Related Readings</a></li>
+</ul>
+  </div>
+  <div id="markdown-content">
+    <h2 id="the-promises-of-active-learning">The Promises of active learning</h2>
+
+<p>Aside from large amounts of computational resources, deep learning models need a crazy
+amount of <strong>labeled data</strong> to learn from. Collecting data is often not a problem as
+<strong>data is usually very abundant</strong>. However, <strong>generating the labels is the bottleneck</strong>.
+This process is very tedious, expensive, and error-prone.</p>
+
+<p>By going back and forth between the annotation and training phase, active learning tries to
+<strong>identify the most valuable data point for the task</strong>. The model is first trained on a small
+number of labeled samples. Then, it selects the unlabeled data about which
+the prediction is uncertain. We say that the model formulates a query of unlabeled data.
+When the annotators provide the labels (that is, the answers), the model
+can be retrained on a larger dataset. The process is repeated several times until the
+annotation budget expires or performances are deemed good enough. In this way,
+fewer samples are required to reach the same, or superior, level of performance.
+This should translate to <strong>faster and cheaper annotations</strong>.</p>
+
+<p>It should look something like this:</p>
+
+<figure>
+  <img src="/assets/img/active-learning-illustrate.svg" alt="Benefit of active learning illustrated" />
+</figure>
+
+<p>The rest of this article doesn’t assume any more knowledge about active learning than
+the description above. If you are interested in learning more about the different
+scenarios and query strategies, I recommend reading
+<a href="http://burrsettles.com/pub/settles.activelearning.pdf">“Active Learning Literature Survey” by Burr Settles</a>
+or the <a href="https://en.wikipedia.org/wiki/Active_learning_(machine_learning)">Wikipedia article on this topic</a></p>
+
+<h2 id="whats-wrong-with-active-learning">What’s wrong with active learning?</h2>
+
+<p>You can find a lot of content that depicts active learning in a very flattering way.
+In sharing my views on the subject, I would like to share some reasons why it’s not so
+widely embraced.</p>
+
+<h3 id="static-dataset-is-the-rule">Static dataset is the rule</h3>
+
+<p>All publicly available datasets are inert. The second they become public, they
+freeze: no new sample or annotation will be added or modified. This happens
+for good reason: <strong>having a static dataset ensures a fair comparison of methods
+and algorithms</strong>. It leads to a sharp contrast between building the datasets and training
+a model.</p>
+
+<p>However, in the industry, the story is completely different. <strong>Data continues to be generated,
+and labeling is often a continuous effort</strong>. As more and more code is shared
+under permissive open-source licenses, the real competitive advantage comes from the size
+and the quality of the datasets. I saw some large, fully annotated datasets being sold for a few
+million dollars. (This dataset was then copied into a large hard drive and sent by mail
+to the other side of the Earth to complete the exchange 😨.
+But that’s a story for another time!)</p>
+
+<p>The curation process is often overlooked. It’s certainly not the sexiest part of
+the job, but I believe people should talk more about it because it’s a key aspect
+of the success of any machine learning project. If I were to hazard a guess, I would say for one
+paper on dataset curation and creation, there are more than ten thousand papers claiming
+state-of-the-art for their models.</p>
+
+<h3 id="training-is-easy-evaluation-is-hard">Training is easy, evaluation is hard</h3>
+
+<p>Training a model is great fun. Unfortunately, that’s the easy part!
+<strong>The real struggle is performing a fair, rigorous and challenging evaluation of the predictive
+capabilities of a model</strong>.
+It is now considered the golden rule to set aside a portion of the labeled samples
+before doing any training. The goal is to understand whether the model behaves
+well on unseen data. Reporting performances on the training set falls short of
+the desired assessment.</p>
+
+<p>Given a dataset with annotations (and some rich metadata), it becomes easier to build a
+representative and challenging test set before training. However, because <strong>active learning combines
+the annotation and the training phases, it is unclear how and when the test set is built</strong>.
+This is often the major flaw in all publications on active learning techniques:
+they rely on already well-made test sets.</p>
+
+<p>If you can afford to select random samples for evaluation, then you are good to go.
+But, if you need stratified sampling or more challenging splits, then active
+learning might not be suitable. A practical approach is to initiate the test set with random samples
+and then to enlarge or rebuild it with samples from the training set when it reaches a certain size.
+The test set can be modified several times over the course of the training.
+However, changing the test set too often makes it hard to track learning progress.</p>
+
+<h3 id="there-is-no-such-thing-as-a-free-lunch">There is no such thing as a free lunch</h3>
+
+<p>As the adage says, nothing comes for free. <strong>Like any machine learning
+technique, active learning requires a good amount of tuning to gain maximum performances</strong>.</p>
+
+<p>The final training set should contain samples which are <strong>representative of
+the latent distribution, as diverse as possible and as informative as possible
+to solve the task</strong>.
+An active learning algorithm must carefully balance these three requirements.
+Indeed, by focusing solely on the most representative samples, we are likely
+to draw very similar items from high-density regions. Some diversity must
+be enforced to cover more of the input space.
+However, if we optimize for diversity, we end up with outliers or items on the
+outskirt of the domain. <strong>A good exploration strategy is often dataset specific,
+so there is no clear winner</strong>.</p>
+
+<p>Finally, the <strong>pertinence of a sample for the task is often related to the
+training dynamic of a specific model</strong>. A data point might be selected because it lies
+on the decision boundary of a model (high uncertainty).
+However, a different model would have placed this boundary somewhere else and queried
+different data points. Even worse, an item might be considered very
+informative in the early steps of the process, but it might become irrelevant when new
+annotations get added. <strong>This greedy strategy is therefore dependent on
+an architecture, a given initialization, and a set of hyper-parameters</strong>.</p>
+
+<h3 id="the-rise-of-other-training-techniques">The rise of other training techniques</h3>
+
+<p>Another prevalent assumption in the literature is that the training
+is fully supervised. Despite being the most widely used training paradigm, supervised
+learning is no longer the only technique to achieve good results.</p>
+
+<p>The recent surge of research in unsupervised, semi-supervised, and self-supervised learning
+has led to a rapidly decreasing performance gap with supervised techniques. These approaches
+leverage huge amounts of unlabeled data; the more we feed them, the better they get.
+<strong>Labeling all the samples might be impossible, but not utilizing the unlabeled
+ones is a waste</strong>.</p>
+
+<h3 id="the-low-return-on-investment">The low return on investment</h3>
+
+<p>Active learning was invented to reduce the amount of required labeled samples.
+Here, the number of annotations serves as a proxy to cut costs and time.
+Yet, <strong>not all samples are created equal</strong>. Some data points might take longer
+to fully annotate, or they might require an expert eye, which is often scarce and/or expensive.
+If that is the case, the dataset breaks the assumption of constant cost per sample,
+which might not yield the expected gain.</p>
+
+<p>In addition, the benefits are minimized because active learning requires a lot
+of computations. Every time a new batch of data is annotated, a new training
+is initiated. This successive retraining on ever-growing datasets tends to increase drag costs.
+If not considered upfront, <strong>the computational costs can eat all the savings
+or make it more expensive than traditional annotation methods</strong>. These computational
+costs are not reported in academic publications.</p>
+
+<p>On top of this, time is no longer a constraint. <strong>The labeling industry
+scales vertically really well</strong> by hiring thousands of workers all around the world.
+Suppose you retrain your model every 24h and you need to query enough data for a full day of
+work for hundreds of annotators; this represents a challenge for any active learning
+methods. As batches become bigger, they bring less and less information per sample.</p>
+
+<p>Finally, <strong>most of the costs induced by active learning are from implementation,
+experiment tracking, version control, automation, maintenance, etc</strong>.
+This is referred to as MLOps and should come as no surprise as active learning
+is a branch of machine learning. These operations overseen
+by skilled and highly paid ML scientists and ML engineers.</p>
+
+<h2 id="when-to-use-active-learning">When to use active learning</h2>
+
+<p>This post aims to present active learning in a less romanticized way than
+what you usually find in blogposts and scientific publications. Despite the numerous
+limitations I listed, I still think active learning is a necessity for some projects;
+however, it should not be used the way it was originally intended.</p>
+
+<p>In my opinion, <strong>active learning can’t be applied when bootstrapping a dataset</strong>
+to reduce cost or to speed up model release. These techniques
+<strong>outweigh the drawbacks only when building enormous datasets at scale or when
+tackling the long tail distribution of edge cases.</strong> Ignoring the tail of edge cases
+can be detrimental for some companies.</p>
+
+<h4 class="no_toc">The data infrastructure comes first</h4>
+
+<p>As briefly discussed, the infrastructure to support fast iterations and curation of
+the data is a key component for a successful data strategy. This means that the companies
+must invest significantly in tooling and automation for the data pipeline.
+These investments in themselves should be beneficial by speeding up delivery, reducing
+human operations, etc.</p>
+
+<p><strong>Active learning comes into play only when the data infrastructure
+is matured and mastered</strong>. At this scale, active learning becomes the solution to keep
+the dataset growth under control and keep infrastructure cost manageable.</p>
+
+<h4 class="no_toc">The long tail distribution of edge cases</h4>
+
+<p>At first, the model attempts to build a relevant and effective representation
+of the domain space. At this stage, feeding more and more data to a machine learning
+model yields great improvements.</p>
+
+<p>But once the model has gained great generalization capabilities, it needs to handle edge cases.
+By definition, edge cases are rare and difficult. This means <strong>the improvements get smaller
+and smaller as the dataset grows</strong>. This phenomenon is known as diminishing returns on data.</p>
+
+<p>There are two ways to tackle this problem. The first is to make the dataset
+several orders of magnitude larger. The bad news is that
+<a href="https://ai.googleblog.com/2017/07/revisiting-unreasonable-effectiveness.html">Google</a>,
+<a href="https://engineering.fb.com/2018/05/02/ml-applications/advancing-state-of-the-art-image-recognition-with-deep-learning-on-hashtags/">Facebook</a>, and
+<a href="https://arxiv.org/abs/2104.10972">Alibaba</a> have found a
+<strong>logarithmic correlation between performance and the number of annotated samples</strong>.
+If you have deep pockets, racks full of GPUs, and a lot of time, then this is an easy solution
+to boost performance.</p>
+
+<p>The logarithmic relationship between the number of samples and
+the performances is related to the distribution of edge cases. The real world is messy,
+and therefore all machine learning problems have a long tail distribution of data
+(a VERY long tail for most tasks), as illustrated below. As the number
+of samples decreases, so does the performance.
+A16z has a fascinating blog on this topic:
+<a href="https://a16z.com/2020/08/12/taming-the-tail-adventures-in-improving-ai-economics/">Taming the Tail: Adventures in Improving AI Economics</a>.
+The takeaway is that, to tackle the long tail
+distribution, one should optimize the model, narrow down the problem, and
+obtain more data from customers.</p>
+
+<figure>
+  <img src="/assets/img/long-tail-distribution.svg" alt="Long tail distribution illustration" />
+</figure>
+
+<p>Another solution is to <strong>be more selective when building the training set</strong>.
+The goal is to change the prevalence of observations through a careful selection.
+Rather than including all possible data points and hoping for the best, it’s time
+to optimize for the quality of samples. This is where active learning thrives!
+It helps identify underrepresented cases where the model struggles,
+and it discards samples related to already learned concepts.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Active learning is often presented as a way to help bootstrap a dataset.
+In my opinion, active learning and other sophisticated means of data curation
+should be used only during a later stage when the data pipeline is already quite advanced.
+<strong>Active learning is as much of an engineering solution for dataset scaling as it is
+a machine learning technique to chase the last few points of accuracy</strong>.</p>
+
+<p>These techniques should identify gaps in the datasets, balance data distribution, and
+most importantly close the feedback loop. With active learning, it becomes easier to
+identify the failure modes of the model. This assessment provides insights
+into the exploration and curation of the data, and finally, results in ad hoc rules for adding
+specific samples to the training set. Being proactive in the discovery of infrequent
+samples is paramount for most real-world applications such as self-driving cars
+and healthcare.</p>
+
+<h2 id="related-readings">Related Readings</h2>
+
+<ul>
+  <li><a href="https://blog.waymo.com/2020/02/content-search.html">Waymo Blog - Seeing is Knowing: Advances in search and image recognition train Waymo’s self-driving technology for any encounter</a></li>
+  <li><a href="https://www.youtube.com/watch?v=g6bOwQdCJrc">Andrej Karpathy’s (Tesla) talk at CVPR’21 - Workshop on autonomous driving</a></li>
+  <li><a href="https://medium.com/cruise/cruise-continuous-learning-machine-30d60f4c691b">Cruise’s Continuous Learning Machine Predicts the Unpredictable on San Francisco Roads</a></li>
+</ul>
+
+
+  </div>
+
+  
+</div>
+
+<!-- POST NAVIGATION -->
+<div class="postNav clearfix">
+   
+    <a class="prev" href="/blog/model-relationship/"><span>&laquo;&nbsp;Relationship Between Machine Learning Methods</span>
+    
+  </a>
+    
+    
+    <a class="next" href="/blog/rl-mars-lander/"><span>Learning to Land on Mars with Reinforcement Learning&nbsp;&raquo;</span>
+     
+    </a>
+   
+</div>
+
+      </div>
+   </div><!-- end .content -->
+
+   <div class="footer">
+   <div class="container">
+      <p class="copy">&copy; 2022 <a href="https://antoinebrl.github.io">Antoine Broyelle.</a>
+        Powered by <a href="https://pages.github.com/">GitHub Pages</a> & <a href="http://jekyllrb.com">Jekyll</a>.
+        Design inspired by <a href="https://github.com/brianmaierjr/long-haul">long-haul</a>.
+      </p>
+
+      <div class="footer-links">
+         <ul class="noList">
+            
+            
+            <li><a href="https://twitter.com/antbrl">
+                  <svg id="twitter" class="custom-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100" style="height: 30px; width: 30px;"><circle class="outer-shape" cx="50" cy="50" r="48" style="opacity: 1;"></circle>
+                  <path class="inner-shape" style="opacity: 1;" transform="translate(25,25) scale(0.5)" d="M99.001,19.428c-3.606,1.608-7.48,2.695-11.547,3.184c4.15-2.503,7.338-6.466,8.841-11.189 c-3.885,2.318-8.187,4-12.768,4.908c-3.667-3.931-8.893-6.387-14.676-6.387c-11.104,0-20.107,9.054-20.107,20.223 c0,1.585,0.177,3.128,0.52,4.609c-16.71-0.845-31.525-8.895-41.442-21.131C6.092,16.633,5.1,20.107,5.1,23.813 c0,7.017,3.55,13.208,8.945,16.834c-3.296-0.104-6.397-1.014-9.106-2.529c-0.002,0.085-0.002,0.17-0.002,0.255 c0,9.799,6.931,17.972,16.129,19.831c-1.688,0.463-3.463,0.71-5.297,0.71c-1.296,0-2.555-0.127-3.783-0.363 c2.559,8.034,9.984,13.882,18.782,14.045c-6.881,5.424-15.551,8.657-24.971,8.657c-1.623,0-3.223-0.096-4.796-0.282 c8.898,5.738,19.467,9.087,30.82,9.087c36.982,0,57.206-30.817,57.206-57.543c0-0.877-0.02-1.748-0.059-2.617 C92.896,27.045,96.305,23.482,99.001,19.428z"></path>
+                  </svg>
+            </a></li>
+            
+            
+            <li><a href="https://github.com/antoinebrl">
+                  <svg id="github" class="custom-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100" style="height: 30px; width: 30px;"><circle class="outer-shape" cx="50" cy="50" r="48" style="opacity: 1;"></circle>
+                  <path class="inner-shape" style="opacity: 1;" transform="translate(25,25) scale(0.5)" d="M50,1C22.938,1,1,22.938,1,50s21.938,49,49,49s49-21.938,49-49S77.062,1,50,1z M79.099,79.099 c-3.782,3.782-8.184,6.75-13.083,8.823c-1.245,0.526-2.509,0.989-3.79,1.387v-7.344c0-3.86-1.324-6.699-3.972-8.517 c1.659-0.16,3.182-0.383,4.57-0.67c1.388-0.287,2.855-0.702,4.402-1.245c1.547-0.543,2.935-1.189,4.163-1.938 c1.228-0.75,2.409-1.723,3.541-2.919s2.082-2.552,2.847-4.067s1.372-3.334,1.818-5.455c0.446-2.121,0.67-4.458,0.67-7.01 c0-4.945-1.611-9.155-4.833-12.633c1.467-3.828,1.308-7.991-0.478-12.489l-1.197-0.143c-0.829-0.096-2.321,0.255-4.474,1.053 c-2.153,0.798-4.57,2.105-7.249,3.924c-3.797-1.053-7.736-1.579-11.82-1.579c-4.115,0-8.039,0.526-11.772,1.579 c-1.69-1.149-3.294-2.097-4.809-2.847c-1.515-0.75-2.727-1.26-3.637-1.532c-0.909-0.271-1.754-0.439-2.536-0.503 c-0.782-0.064-1.284-0.079-1.507-0.048c-0.223,0.031-0.383,0.064-0.478,0.096c-1.787,4.53-1.946,8.694-0.478,12.489 c-3.222,3.477-4.833,7.688-4.833,12.633c0,2.552,0.223,4.889,0.67,7.01c0.447,2.121,1.053,3.94,1.818,5.455 c0.765,1.515,1.715,2.871,2.847,4.067s2.313,2.169,3.541,2.919c1.228,0.751,2.616,1.396,4.163,1.938 c1.547,0.543,3.014,0.957,4.402,1.245c1.388,0.287,2.911,0.511,4.57,0.67c-2.616,1.787-3.924,4.626-3.924,8.517v7.487 c-1.445-0.43-2.869-0.938-4.268-1.53c-4.899-2.073-9.301-5.041-13.083-8.823c-3.782-3.782-6.75-8.184-8.823-13.083 C9.934,60.948,8.847,55.56,8.847,50s1.087-10.948,3.231-16.016c2.073-4.899,5.041-9.301,8.823-13.083s8.184-6.75,13.083-8.823 C39.052,9.934,44.44,8.847,50,8.847s10.948,1.087,16.016,3.231c4.9,2.073,9.301,5.041,13.083,8.823 c3.782,3.782,6.75,8.184,8.823,13.083c2.143,5.069,3.23,10.457,3.23,16.016s-1.087,10.948-3.231,16.016 C85.848,70.915,82.88,75.317,79.099,79.099L79.099,79.099z"></path>
+                  </svg>
+            </a></li>
+            
+            
+         </ul>
+      </div>
+   </div>
+</div><!-- end .footer -->
+
+   <script src="/assets/js/dropcap.min.js"></script>
+<script src="/assets/js/responsive-nav.min.js"></script>
+<script src="/assets/js/scripts.js"></script>
+
+
+</body>
+
+</html>

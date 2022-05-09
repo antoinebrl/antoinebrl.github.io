@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7"><![endif]-->
+<!--[if IE 7]><html class="no-js lt-ie9 lt-ie8" <![endif]-->
+<!--[if IE 8]><html class="no-js lt-ie9" <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <title>Learning to Land on Mars with Reinforcement Learning</title>
+
+    <!-- Open Graph Meta -->
+    <meta content="Antoine Broyelle" property="og:site_name">
+    
+      <meta content="Learning to Land on Mars with Reinforcement Learning" property="og:title">
+    
+    
+      <meta content="article" property="og:type">
+    
+    
+      <meta content="Once in a while, a friend who is either learning to code or tackling complex problems drags me back to CodinGame However, I tend to put one type of challenge aside: optimal control systems. This kind of problem often requires hand-crafting a good cost function and modeling the transition dynamics. But what if we could solve the challenge without coding a control policy? This is the story of how I landed a rover on Mars using reinforcement learning." property="og:description">
+    
+    
+      <meta content="https://antoinebrl.github.io//blog/rl-mars-lander/" property="og:url">
+    
+    
+      <meta content="2022-02-06T14:14:00+00:00" property="article:published_time">
+      <meta content="https://antoinebrl.github.io//about/" property="article:author">
+    
+    
+      <meta content="https://antoinebrl.github.io//assets/img/lights.jpg" property="og:image">
+    
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@antbrl">
+    <meta name="twitter:creator" content="@antbrl">
+    
+      <meta name="twitter:title" content="Learning to Land on Mars with Reinforcement Learning">
+    
+    
+      <meta name="twitter:url" content="https://antoinebrl.github.io//blog/rl-mars-lander/">
+    
+    
+      <meta name="twitter:description" content="Once in a while, a friend who is either learning to code or tackling complex problems drags me back to CodinGame However, I tend to put one type of challenge aside: optimal control systems. This kind of problem often requires hand-crafting a good cost function and modeling the transition dynamics. But what if we could solve the challenge without coding a control policy? This is the story of how I landed a rover on Mars using reinforcement learning.">
+    
+    
+      <meta name="twitter:image:src" content="https://antoinebrl.github.io//assets/img/lights.jpg">
+    
+
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon/favicon.ico" />
+
+    <!-- Come and get me RSS readers -->
+    <link rel="alternate" type="application/rss+xml" title="Antoine Broyelle" href="https://antoinebrl.github.io//feed.xml" />
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!--[if IE 8]><link rel="stylesheet" href="/assets/css/ie.css"><![endif]-->
+    <link rel="canonical" href="https://antoinebrl.github.io//blog/rl-mars-lander/">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,800&display=swap" rel="preload">
+    <link href="https://fonts.googleapis.com/css?family=PT+Serif:400,700,400italic,700italic&display=swap" rel="preload">
+    <link href="https://fonts.googleapis.com/css?family=Crimson+Text&display=swap" rel="preload">
+
+    <!-- Modernizr -->
+<!--    <script src="/assets/js/modernizr.custom.15390.js" type="text/javascript"></script>-->
+
+    
+</head>
+
+
+<body>
+
+    <div class="header">
+     <div class="container">
+         <h1 class="logo"><a href="/">Antoine Broyelle</a></h1>
+         <nav class="nav-collapse">
+             <ul class="noList">
+                 
+                 <li class="element first  last">
+                     <a href="/index.html">Home</a>
+                 </li>
+                 
+             </ul>
+         </nav>
+     </div>
+ </div><!-- end .header -->
+
+
+   <div class="content">
+      <div class="container">
+         <div class="post">
+  
+  <h1 class="postTitle">Learning to Land on Mars with Reinforcement Learning</h1>
+  <p class="meta">February 06, 2022</p>
+
+  
+  <p>Once in a while, a friend who is either learning to code or tackling complex problems drags me back to CodinGame However, I tend to put one type of challenge aside: optimal control systems. This kind of problem often requires hand-crafting a good cost function and modeling the transition dynamics. But what if we could solve the challenge without coding a control policy? This is the story of how I landed a rover on Mars using reinforcement learning.</p>
+  <div id="table-of-contents">
+    <ul id="toc" class="section-nav">
+<li class="toc-entry toc-h2"><a href="#codingame-mars-lander">CodinGame Mars Lander</a></li>
+<li class="toc-entry toc-h2"><a href="#coding-the-game">Coding the Game</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#the-interface">The Interface</a></li>
+<li class="toc-entry toc-h3"><a href="#action-space">Action Space</a></li>
+<li class="toc-entry toc-h3"><a href="#observation-space-and-policy-network">Observation Space and Policy Network</a></li>
+<li class="toc-entry toc-h3"><a href="#simulation">Simulation</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#reinforcement-learning">Reinforcement Learning</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#policy-gradient">Policy Gradient</a></li>
+<li class="toc-entry toc-h3"><a href="#action-noise">Action Noise</a></li>
+<li class="toc-entry toc-h3"><a href="#reward-shaping">Reward Shaping</a>
+<ul>
+<li class="toc-entry toc-h4"><a href="#reward-sparsity">Reward Sparsity</a></li>
+<li class="toc-entry toc-h4"><a href="#reward-scale">Reward Scale</a></li>
+<li class="toc-entry toc-h4"><a href="#not-taking-shortcuts">Not Taking Shortcuts</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h3"><a href="#hyper-parameters">Hyper-Parameters</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#exporting-the-policy-network">Exporting the Policy Network</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#pytorch-modules-without-pytorch">Pytorch Modules without Pytorch</a></li>
+<li class="toc-entry toc-h3"><a href="#encoding-for-shortening">Encoding for Shortening</a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h2"><a href="#conclusion">Conclusion</a></li>
+</ul>
+  </div>
+  <div id="markdown-content">
+    <h2 id="codingame-mars-lander">CodinGame Mars Lander</h2>
+
+<p><a href="https://www.codingame.com/multiplayer/optimization/mars-lander">This game’s</a>
+goal is to land the spacecraft while using as few propellants as possible.
+The mission is successful only if the rover reaches a flat ground,
+at a low speed, without any tilt.</p>
+
+<p>For each environment, we’re given Mars’s surface as pairs of coordinates, as well as the
+lander’s current state. That state includes position, speed,
+angle, current engine thrust, and remaining fuel volume. At each iteration,
+the program has less than 100ms to output the desired rotation and thrust power.</p>
+
+<p>One test case looks like this:</p>
+
+<figure>
+    <video width="80%" controls="" style="margin:0 auto 2em auto;display:block">
+      <source src="/assets/videos/marslander.mov" type="video/mp4" />
+    Your browser does not support the video tag.
+    </video>
+    <figcaption>Vid 1 — CodinGame Mars Lander</figcaption>
+</figure>
+
+<h2 id="coding-the-game">Coding the Game</h2>
+
+<p>The CodinGame platform is not designed to gather feedback on millions of
+simulations and improve on them. The only way to circumvent this limitation
+is by reimplementing the game.</p>
+
+<h3 id="the-interface">The Interface</h3>
+
+<p>Because I wanted to do some reinforcement learning, I decided to follow the
+<a href="https://gym.openai.com/">Gym package</a>’s <a href="https://github.com/openai/gym/blob/c6b6754b128c095df49c74785277d8d5e9f81755/gym/core.py#L17">Environment</a> class interface. Gym is a collection of
+test environments used to benchmark reinforcement learning algorithms.
+By complying with this interface, I could use many algorithms out of the box (or so I thought).</p>
+
+<p>All Gym Environments follow the same interface, with two fields and three methods:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">action_space</code></li>
+  <li><code class="language-plaintext highlighter-rouge">observation_space</code></li>
+  <li><code class="language-plaintext highlighter-rouge">reset()</code>: called to generate a new game</li>
+  <li><code class="language-plaintext highlighter-rouge">step(action)</code>: returns the new observations of the environment given a specific action</li>
+  <li><code class="language-plaintext highlighter-rouge">render()</code>: visualizes the agent in its environment</li>
+</ul>
+
+<p>At first, I thought I could go without implementing <code class="language-plaintext highlighter-rouge">render</code>, but I was wrong.
+As with any other machine learning task, visualization is of the utmost
+importance for debugging.</p>
+
+<h3 id="action-space">Action Space</h3>
+
+<p>The algorithm controls the spacecraft’s thrust and orientation.
+The thrust has 5 levels between 0 and 4, and the angle is expressed in
+degrees between -90 and 90.</p>
+
+<p>Rather than working in absolutes values, I decided that the action space
+would be a relative change in thrust and angle. The engine supports only
+a +/-1 change in thrust, and the orientation cannot change more than
+15 degrees in absolute value.</p>
+
+<p>Thrust and angle can be represented with categorical variables, with 3
+and 31 mutually exclusive values respectively. Another possible characterization,
+which I decided to use, is to represent the action space as two continuous variables.
+For stability during the training, I normalized these values between -1 and 1.</p>
+
+<h3 id="observation-space-and-policy-network">Observation Space and Policy Network</h3>
+
+<p>Defining the observation space is a bit more challenging than it is for
+the action space. First, the agent expects a fixed-length input, but the
+ground is provided as a broken line with up to 30 points. To fulfill this
+requirement, I iteratively broke the longest segment into two by
+adding an intermediate point, until I reached thrity 2D points, for a total
+of 60 elements.</p>
+
+<p>I then concatenated to these 60 elements the seven values that fully characterize the
+rover’s dynamic: x and y position, horizontal and vertical speed, angle,
+current thrust, and remaining propellant. I normalized these values
+between 0 and 1, or -1 and 1 if negative values are allowed.</p>
+
+<p>In the early experiments, the fully connected policy was clearly
+struggling to identify the landing pad. The rover exhibited completely
+different behavior when the ground was translated horizontally because
+a slight offset creates a completely different representation of the ground
+once the surface is broken down into 30 points.</p>
+
+<p>Changing the policy to a convolutional neural network (CNN) could have helped
+identify the landing area. By design, CNNs (unlike MLP) are translation
+equivariant. In addition, CNNs could have also eliminated the problem of
+fixed-length input I addressed above. Indeed, their number of
+parameters is independent of the input size.</p>
+
+<p>After a few trials, it became clear that this approach would require a lot
+more effort to achive success. When using a CNN to extract an abstract
+ground representation, at some point these features need to be merged
+with the rover state.
+When should they merge? What should be the CNN’s capacity compared
+to that of the MLP? How should both networks be initialized? Would they work with
+the same learning rate? I ran a few experiments, but none of them were
+firmly conclusive.</p>
+
+<p>In the end, to avoid going mad, I decided to use an MLP-based policy
+but to help the agent by providing a bit more information.
+The trick was to add the x and y coordinates of the two extremities
+of the flat section. This extra information can easily be computed by hand,
+so why not feed it to the model?</p>
+
+<h3 id="simulation">Simulation</h3>
+
+<p>When implementing the <code class="language-plaintext highlighter-rouge">reset()</code> function, I wanted to utilize as many
+environments as possible. I initially thought that generating a random ground surface
+and random rover state would do the job.</p>
+
+<p>However, it turned out that not all these environments could be solved. For example,
+the rover might exit the frame before compensating for the initial speed,
+or the solution might consume an extremely high propellant volume.
+Finding a valid initial state might be as hard as solving the problem itself.</p>
+
+<p>Clearly these unsolvable cases were penalising the training.
+This comes as no surprise; the same rule applies for any other machine learning
+task or algorithm. In the end, I decided to start from the five test cases
+CodinGame provided and to apply some random augmentations.</p>
+
+<h2 id="reinforcement-learning">Reinforcement Learning</h2>
+
+<h3 id="policy-gradient">Policy Gradient</h3>
+
+<p>In reinforcement learning, an agent interacts with the environment via its
+actions at each time step. In return, the agent is granted a reward and is
+placed in a new state. The main assumption is that the future
+state depends only on the current state and the action taken. The objective
+is to maximise the rewards accumulated over the entire sequence.</p>
+
+<p>Two classes of optimization algorithms are popular: Q-learning and policy gradient methods.
+The former aims to approximate the best transition function from one step
+to another. The latter directly optimizes for the best action. Despite being
+less popular, policy gradient methods have the advantage of supporting continuous
+action space and tend to converge faster.</p>
+
+<p>For this task, I used a policy gradient method known as
+<a href="https://arxiv.org/abs/1707.06347">Proximal Policy Optimization (a.k.a PPO)</a>.
+In its <a href="https://arxiv.org/abs/2009.10897">revisited version</a>,
+PPO introduces a simple twist to the vanilla policy gradient method by
+clipping the update magnitude. By reducing the variance and
+taking smaller optimization steps, the learning becomes more stable, with
+fewer parameter tweaks.</p>
+
+<p>If you want to learn more about PPO and its siblings, I recommend the article
+<a href="https://lilianweng.github.io/lil-log/2018/04/08/policy-gradient-algorithms.html">Policy Gradient Algorithms</a>
+by Lilian Weng, Applied AI Research Lead at OpenAI.</p>
+
+<h3 id="action-noise">Action Noise</h3>
+
+<p>In the first experiments, the rover was very shaky, as its tilt oscillated
+around the optimal value. To eliminate this jerky motion, I used
+gSDE, which stands for <a href="https://arxiv.org/abs/2005.05719">generalized State-Dependent Exploration</a>.</p>
+
+<p>In reinforcement learning, it’s important to balance exploitation with exploration.
+Without exploring the action space, the agent has no way to find
+potential improvements. The exploration is often achieved by adding independent
+Gaussian noise to the action distribution.</p>
+
+<p>The gSDE authors propose a state-dependent noise. That way, during one episode,
+the action remains the same for a given state rather than oscillating around a mean value. 
+This exploration technique leads to smoother trajectories.</p>
+
+<figure>
+    <video width="80%" controls="" style="margin:0 auto 2em auto;display:block">
+      <source src="/assets/videos/marslander_no-sde.mov" type="video/mp4" />
+    Your browser does not support the video tag.
+    </video>
+    <figcaption>Vid. 2 — Jerky trajectory without gSDE</figcaption>
+</figure>
+
+<h3 id="reward-shaping">Reward Shaping</h3>
+
+<p>The reward is an incentive mechanism that tells the agent how well it’s performing.
+Crafting this function correctly is a big deal, given that the goal is
+to maximise the cumulative rewards.</p>
+
+<h4 id="reward-sparsity">Reward Sparsity</h4>
+
+<p>The first difficulty is reward sparsity. Let’s say we want to train a model
+to solve a Rubik’s cube. What would be a good reward function, knowing
+that there is only one good solution among 43,252,003,274,489,856,000 (~43 quintillion)
+possible states?
+It would take years to solve if we relied only on luck.
+If you’re interested in this problem, have a look at
+<a href="https://arxiv.org/abs/1805.07470">Solving the Rubik’s Cube Without Human Knowledge</a>.</p>
+
+<p>In our case, the rover has correctly landed if it grounds on a flat surface
+with a tilt angle of exactly 0° and a vertical and horizontal speed lower
+than 40 m/s and 20 m/s respectively. During training, I decided to loosen
+the angle restriction to anything between -15° and 15°, which increased the
+chances of reaching a valid terminal state.
+At inference, some post-processing code compensates for the rotation
+when the rover is about to land.</p>
+
+<h4 id="reward-scale">Reward Scale</h4>
+
+<p>If the rover runs out of fuel, or if it leaves the frame, it
+receives a negative reward of -150, and the episode ends.
+A valid terminal state yields a reward equal to the amount of remaining
+propellant.</p>
+
+<p>By default, if the rover is still flying, it earns a reward of +1.
+In general, positive rewards encourage longer episodes, as the agent continues
+accumulating. On the other hand, negative rewards urge the agent
+to reach a terminal state as soon as possible to avoid penalties.</p>
+
+<p>For this problem, shorter episodes should ideally consume less fuel.
+However, using the quantity of remaining fuel as a terminal reward
+creates a massive step function that encourages early misson completion.
+By maintaining a small positive reward at each step, the
+rover quickly learns to hover.</p>
+
+<figure>
+    <video width="80%" controls="" style="margin:0 auto 2em auto;display:block">
+      <source src="/assets/videos/marslander_hover.mov" type="video/mp4" />
+    Your browser does not support the video tag.
+    </video>
+    <figcaption>Vid. 3 — Learning to hover</figcaption>
+</figure>
+
+<p>For the rest, not all mistakes are created equal. I decided to 
+give a reward of -75 if speed and angle were correct when touching
+non-flat ground, as well as a -50 reward if the spacecraft crashed
+on the landing area.
+Without more experiments, it’s unclear whether if the distinction of
+collisions represents any advantage.</p>
+
+<h4 id="not-taking-shortcuts">Not Taking Shortcuts</h4>
+
+<p>Previously, I talked about helping the model identify the arrival site.
+One idea was to change the policy structure by replacing the MLP with a CNN.
+I used the solution of adding this information in the input vector. A third
+possibility was to change the reward function to incorporate a notion of
+distance to the landing area.</p>
+
+<p>I ran a few experiments in which the reward was the negative
+Euclidean distance between the landing site and the crash site.
+As it turned out, this strategy instructs the agent to move in a straight
+line toward the target.</p>
+
+<p>If  the starting position and the landing site have no direct path between them,
+the agent would have to undergo a long sequence of decreasing rewards
+to reach the desired destination. Despite being an intuitive solution,
+using the Euclidean distance as a negative reward is a strong inductive bias
+that reduces the agent’s exploration capabilities.</p>
+
+<figure>
+    <video width="80%" controls="" style="margin:0 auto 2em auto;display:block">
+      <source src="/assets/videos/marslander_l2dist.mov" type="video/mp4" />
+    Your browser does not support the video tag.
+    </video>
+    <figcaption>Vid. 4 — Suboptimal strategy when minimizing distance to landing site</figcaption>
+</figure>
+
+<h3 id="hyper-parameters">Hyper-Parameters</h3>
+
+<p>In computer vision or natural language processing, starting the training from a
+pretrained model is good practice: it speeds up training
+and tends to improve performance. However, this project has
+no available pretrained model.</p>
+
+<p>Another element that is even more annoying is the absence of good hyperparameters.
+At first, I used the default values, but the training suffered from
+catastrophic forgetting. As you can see on the graph below, the mean reward
+drops sharply and struggles to recover.</p>
+
+<figure>
+  <img src="/assets/img/rl-mars-lander-unstable-learning.png" alt="Catastrophic forgetting" style="width:100%;max-width:680px" />
+  <figcaption>Fig 1 — Mean Episode Reward — Catastrophic forgetting.</figcaption>
+</figure>
+
+<p>Rather than starting an extensive hyperparameter search, I took inspiration
+from the <a href="https://github.com/DLR-RM/rl-baselines3-zoo/blob/master/hyperparams/ppo.yml">RL baselines3 Zoo configurations</a>.
+After a few tweaks, I had a great set of values. Still, the policy
+could doubtless be further improved with hyperparameter optimization.</p>
+
+<h2 id="exporting-the-policy-network">Exporting the Policy Network</h2>
+
+<p>Training a good policy is only half the work. The final objective is
+to submit a solution on CodinGame. Two hurdles made it non-trivial:
+Pytorch is not supported, and the submission must be shorter than 100k characters.</p>
+
+<h3 id="pytorch-modules-without-pytorch">Pytorch Modules without Pytorch</h3>
+
+<p>Since v1.7.0, Pytorch has the <code class="language-plaintext highlighter-rouge">fx</code> subpackage which contains three components:
+a symbolic tracer, an intermediate representation, and Python code generation.
+By employing a symbolic tracing, you obtain a graph that can be transformed.
+Finally, the last bit generates a valid code with match the graph’s semantic.</p>
+
+<p>Unfortunately, the code generator covers only the module’s <code class="language-plaintext highlighter-rouge">forward()</code> method.
+For the <code class="language-plaintext highlighter-rouge">__init__()</code>, I wrote the code generation to traverse through
+all modules and print all parameter weights. Finally, since Pytorch is unavailable
+in the environment, I had to implement three Pytorch modules in pure numpy:
+<code class="language-plaintext highlighter-rouge">Sequential</code>, <code class="language-plaintext highlighter-rouge">Linear</code>, and <code class="language-plaintext highlighter-rouge">ReLU</code>.</p>
+
+<p>The exported module is self-contained and combines both parameter weights
+and a computation graph. The result looks something like this:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">float32</span>
+
+<span class="k">class</span> <span class="nc">MarsLanderPolicy</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">policy_net</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">Linear</span><span class="p">(</span>
+                <span class="n">weight</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">6.22188151e-02</span><span class="p">,</span> <span class="o">-</span><span class="mf">9.03800875e-02</span><span class="p">,</span>  <span class="p">...],</span> <span class="p">...],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">),</span>
+                <span class="n">bias</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.03082988</span><span class="p">,</span>  <span class="mf">0.05894076</span><span class="p">,</span> <span class="p">...],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">ReLU</span><span class="p">(),</span>
+            <span class="n">Linear</span><span class="p">(</span>
+                <span class="n">weight</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([[</span> <span class="mf">6.34499416e-02</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.32812252e-02</span><span class="p">,,</span>  <span class="p">...],</span> <span class="p">...],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">),</span>
+                <span class="n">bias</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.0534077</span> <span class="p">,</span> <span class="o">-</span><span class="mf">0.02541942</span><span class="p">,</span> <span class="p">...],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">),</span>
+            <span class="p">),</span>
+            <span class="n">ReLU</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">action_net</span> <span class="o">=</span> <span class="n">Linear</span><span class="p">(</span>
+            <span class="n">weight</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">0.07862598</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.01890517</span><span class="p">,</span> <span class="p">...],</span> <span class="p">...],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">),</span>
+            <span class="n">bias</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.08827707</span><span class="p">,</span> <span class="mf">0.10649449</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observation</span><span class="p">):</span>
+        <span class="n">policy_net_0</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">policy_net</span><span class="p">,</span> <span class="s">"0"</span><span class="p">)(</span><span class="n">observation</span><span class="p">);</span>  <span class="n">observation</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">policy_net_1</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">policy_net</span><span class="p">,</span> <span class="s">"1"</span><span class="p">)(</span><span class="n">policy_net_0</span><span class="p">);</span>  <span class="n">policy_net_0</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">policy_net_2</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">policy_net</span><span class="p">,</span> <span class="s">"2"</span><span class="p">)(</span><span class="n">policy_net_1</span><span class="p">);</span>  <span class="n">policy_net_1</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">policy_net_3</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">.</span><span class="n">policy_net</span><span class="p">,</span> <span class="s">"3"</span><span class="p">)(</span><span class="n">policy_net_2</span><span class="p">);</span>  <span class="n">policy_net_2</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">action_net</span> <span class="o">=</span> <span class="bp">self</span><span class="p">.</span><span class="n">action_net</span><span class="p">(</span><span class="n">policy_net_3</span><span class="p">);</span>  <span class="n">policy_net_3</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="n">action_net</span>
+</code></pre></div></div>
+
+<h3 id="encoding-for-shortening">Encoding for Shortening</h3>
+
+<p>As good as it looks, the exported solution is way too long at 440k characters.</p>
+
+<figure>
+  <img src="/assets/img/codingame-code-too-long.png" alt="Oups Submitted code is too long" style="max-width:300px" />
+  <figcaption>Fig. 1 — CodinGame Error</figcaption>
+</figure>
+
+<p>The model has 71 input values, two hidden layers with 128 activations and two output nodes,
+which represents 25,858 free parameters. We could train a shallower network, but let’s see if
+we can find a way to shrink the generated code by at least 78%.</p>
+
+<p>Each parameter is a 32-bit float, which takes, on average, 16 characters in plain text.
+Even when truncating to float16, the exported module is only ~100k chars shorter.</p>
+
+<p>Clearly, printing all the floating numbers decimals is expensive.
+A different representation must be used! The shortest solution is obtained by taking the
+<a href="https://en.wikipedia.org/wiki/Base64">base64</a> encoding of the buffers filled with half float. The solution is now only 75k chars long.</p>
+
+<p>I had one more trick up my sleeve in case base64 had been insufficient. So far, I have only been
+using chars contained in the <a href="https://en.wikipedia.org/wiki/ASCII">ASCII table</a>. The hack is to
+group two consecutive UTF-8 chars into one UTF-16 char. It’s way less readable and practical, but this yields
+another 50% reduction! Look at this monstrosity:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">exec</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="s">'浩潰瑲猠獹椊灭牯⁴慭桴䜊㴠㌠㜮ㄱ圊䑉䡔㴠㜠〰ਰ䕈䝉呈㴠㌠〰ਰ⸮ ... ⸮ਮ牰湩⡴≦牻畯摮愨杮敬紩笠潲湵⡤桴畲瑳紩⤢'</span><span class="p">,</span><span class="s">'u16'</span><span class="p">)[</span><span class="mi">2</span><span class="p">:])</span>
+</code></pre></div></div>
+
+<p>With these three techniques combined (numerical approximation, buffer encoding and text encoding)
+it would have been possible to accommodate a model with 2.75 times
+more learnable parameters.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>At the time of writing, with a cumulated 2,257 liters of fuel left,
+this solution puts me in 225th place over 4,986 contestants.
+The policy only takes between 8ms and 10ms.</p>
+
+<p>This project was quite fun and a great opportunity for some hands-on RL practice.
+For me, the main takeaway is that RL uses the same nuts and bolts as other ML projects.
+Simplify the problem, always use visualization, provide good input, and don’t expect default
+hyperparameters to work on your task.</p>
+
+<p>Have a look at the repo (MIT license) <a href="https://github.com/antoinebrl/rl-mars-lander">antoinebrl/rl-mars-lander</a> if you want to play the game, use the environment
+or use the trained agent.</p>
+
+  </div>
+
+  
+</div>
+
+<!-- POST NAVIGATION -->
+<div class="postNav clearfix">
+   
+    <a class="prev" href="/blog/active-learning/"><span>&laquo;&nbsp;Why isn't Active&nbsp;Learning Widely Adopted?</span>
+    
+  </a>
+    
+   
+</div>
+
+      </div>
+   </div><!-- end .content -->
+
+   <div class="footer">
+   <div class="container">
+      <p class="copy">&copy; 2022 <a href="https://antoinebrl.github.io">Antoine Broyelle.</a>
+        Powered by <a href="https://pages.github.com/">GitHub Pages</a> & <a href="http://jekyllrb.com">Jekyll</a>.
+        Design inspired by <a href="https://github.com/brianmaierjr/long-haul">long-haul</a>.
+      </p>
+
+      <div class="footer-links">
+         <ul class="noList">
+            
+            
+            <li><a href="https://twitter.com/antbrl">
+                  <svg id="twitter" class="custom-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100" style="height: 30px; width: 30px;"><circle class="outer-shape" cx="50" cy="50" r="48" style="opacity: 1;"></circle>
+                  <path class="inner-shape" style="opacity: 1;" transform="translate(25,25) scale(0.5)" d="M99.001,19.428c-3.606,1.608-7.48,2.695-11.547,3.184c4.15-2.503,7.338-6.466,8.841-11.189 c-3.885,2.318-8.187,4-12.768,4.908c-3.667-3.931-8.893-6.387-14.676-6.387c-11.104,0-20.107,9.054-20.107,20.223 c0,1.585,0.177,3.128,0.52,4.609c-16.71-0.845-31.525-8.895-41.442-21.131C6.092,16.633,5.1,20.107,5.1,23.813 c0,7.017,3.55,13.208,8.945,16.834c-3.296-0.104-6.397-1.014-9.106-2.529c-0.002,0.085-0.002,0.17-0.002,0.255 c0,9.799,6.931,17.972,16.129,19.831c-1.688,0.463-3.463,0.71-5.297,0.71c-1.296,0-2.555-0.127-3.783-0.363 c2.559,8.034,9.984,13.882,18.782,14.045c-6.881,5.424-15.551,8.657-24.971,8.657c-1.623,0-3.223-0.096-4.796-0.282 c8.898,5.738,19.467,9.087,30.82,9.087c36.982,0,57.206-30.817,57.206-57.543c0-0.877-0.02-1.748-0.059-2.617 C92.896,27.045,96.305,23.482,99.001,19.428z"></path>
+                  </svg>
+            </a></li>
+            
+            
+            <li><a href="https://github.com/antoinebrl">
+                  <svg id="github" class="custom-icon" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100" style="height: 30px; width: 30px;"><circle class="outer-shape" cx="50" cy="50" r="48" style="opacity: 1;"></circle>
+                  <path class="inner-shape" style="opacity: 1;" transform="translate(25,25) scale(0.5)" d="M50,1C22.938,1,1,22.938,1,50s21.938,49,49,49s49-21.938,49-49S77.062,1,50,1z M79.099,79.099 c-3.782,3.782-8.184,6.75-13.083,8.823c-1.245,0.526-2.509,0.989-3.79,1.387v-7.344c0-3.86-1.324-6.699-3.972-8.517 c1.659-0.16,3.182-0.383,4.57-0.67c1.388-0.287,2.855-0.702,4.402-1.245c1.547-0.543,2.935-1.189,4.163-1.938 c1.228-0.75,2.409-1.723,3.541-2.919s2.082-2.552,2.847-4.067s1.372-3.334,1.818-5.455c0.446-2.121,0.67-4.458,0.67-7.01 c0-4.945-1.611-9.155-4.833-12.633c1.467-3.828,1.308-7.991-0.478-12.489l-1.197-0.143c-0.829-0.096-2.321,0.255-4.474,1.053 c-2.153,0.798-4.57,2.105-7.249,3.924c-3.797-1.053-7.736-1.579-11.82-1.579c-4.115,0-8.039,0.526-11.772,1.579 c-1.69-1.149-3.294-2.097-4.809-2.847c-1.515-0.75-2.727-1.26-3.637-1.532c-0.909-0.271-1.754-0.439-2.536-0.503 c-0.782-0.064-1.284-0.079-1.507-0.048c-0.223,0.031-0.383,0.064-0.478,0.096c-1.787,4.53-1.946,8.694-0.478,12.489 c-3.222,3.477-4.833,7.688-4.833,12.633c0,2.552,0.223,4.889,0.67,7.01c0.447,2.121,1.053,3.94,1.818,5.455 c0.765,1.515,1.715,2.871,2.847,4.067s2.313,2.169,3.541,2.919c1.228,0.751,2.616,1.396,4.163,1.938 c1.547,0.543,3.014,0.957,4.402,1.245c1.388,0.287,2.911,0.511,4.57,0.67c-2.616,1.787-3.924,4.626-3.924,8.517v7.487 c-1.445-0.43-2.869-0.938-4.268-1.53c-4.899-2.073-9.301-5.041-13.083-8.823c-3.782-3.782-6.75-8.184-8.823-13.083 C9.934,60.948,8.847,55.56,8.847,50s1.087-10.948,3.231-16.016c2.073-4.899,5.041-9.301,8.823-13.083s8.184-6.75,13.083-8.823 C39.052,9.934,44.44,8.847,50,8.847s10.948,1.087,16.016,3.231c4.9,2.073,9.301,5.041,13.083,8.823 c3.782,3.782,6.75,8.184,8.823,13.083c2.143,5.069,3.23,10.457,3.23,16.016s-1.087,10.948-3.231,16.016 C85.848,70.915,82.88,75.317,79.099,79.099L79.099,79.099z"></path>
+                  </svg>
+            </a></li>
+            
+            
+         </ul>
+      </div>
+   </div>
+</div><!-- end .footer -->
+
+   <script src="/assets/js/dropcap.min.js"></script>
+<script src="/assets/js/responsive-nav.min.js"></script>
+<script src="/assets/js/scripts.js"></script>
+
+
+</body>
+
+</html>
